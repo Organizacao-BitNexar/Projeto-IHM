@@ -4,7 +4,9 @@ from django.http import JsonResponse
 from .models import CorpoCeleste
 
 def index(request):
-    return render(request, 'core/index.html')
+    # Buscamos todos os corpos para que a página já comece cheia
+    corpos = CorpoCeleste.objects.all() 
+    return render(request, 'core/index.html', {'corpos': corpos})
 
 def listar_corpos(request):
     corpos = CorpoCeleste.objects.all()
