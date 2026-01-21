@@ -2,9 +2,9 @@ from django.db import models
 
 class CorpoCeleste(models.Model):
     CATEGORIAS = (
-        ('star', 'Estrela'),
-        ('planet', 'Planeta'),
-        ('moon', 'Lua'),
+        ('estrela', 'Estrela'),
+        ('planeta', 'Planeta'),
+        ('lua', 'Lua'),
     )
 
     nome = models.CharField(max_length=100)
@@ -16,6 +16,7 @@ class CorpoCeleste(models.Model):
     temperatura = models.CharField(max_length=100, blank=True)
     composicao = models.TextField(blank=True)
     curiosidades = models.TextField()
+    foto = models.ImageField(upload_to='corpos_celestes/', null=True, blank=True)
 
     planeta_pai = models.ForeignKey(
         'self',

@@ -1,1684 +1,238 @@
-{%load static %}
+{% load static %}
 <!doctype html>
 <html lang="pt-BR">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema Solar Interativo</title>
+<head>
+    <meta charset="UTF-8">
+    <title>Cosmos Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- FUNDO E ANIMAÇÕES --- */
+        body { 
+            background: radial-gradient(circle at center, #0a1128 0%, #000000 100%);
+            color: white; min-height: 100vh; position: relative; overflow-x: hidden;
+        }
 
-  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+        /* ANIMAÇÃO DE HOVER (O QUE HAVIA SAÍDO) */
+        .celestial-item {
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
 
-  <link rel="stylesheet" href="Galaxia_Para_Todos\Projeto-IHM\sistema_solar\static\css\style.css">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        .celestial-item:hover {
+            transform: scale(1.15) translateY(-10px); /* Cresce e sobe */
+            filter: brightness(1.25);
+        }
 
-  <style>@view-transition { navigation: auto; }</style>
-  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
- </head>
- <body>
-  <main class="container">
-   <header class="header">
-    <h1 class="main-title" id="mainTitle">Sistema Solar Interativo</h1>
-    <p class="subtitle" id="subtitle">Clique nos planetas para explorar suas características</p>
-    <div class="search-container">
-     <div class="search-box"><input type="text" id="searchInput" placeholder="Buscar planetas, luas ou o Sol..." class="search-input"> <button onclick="clearSearch()" class="clear-btn" id="clearBtn" style="display: none;">✕</button>
-     </div>
-     <div class="search-results" id="searchResults"></div>
-    </div>
-    <div class="controls-section"><button onclick="openAddModal()" class="add-btn"> ➕ Adicionar Informação </button>
-     <div class="filter-section"><label for="categoryFilter" class="filter-label">Filtrar por categoria:</label> <select id="categoryFilter" onchange="filterByCategory()" class="filter-select"> <option value="all">Todos</option> <option value="star">Estrelas</option> <option value="planet">Planetas</option> <option value="moon">Luas</option> </select>
-     </div>
-    </div>
-   </header>
-   <section class="solar-system">
-    <div class="celestial-body" onclick="showInfo('sol')">
-     <svg class="planet-image sun" viewbox="0 0 100 100"><defs>
-       <radialgradient id="sunGradient" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" style="stop-color:#ffeb3b" />
-        <stop offset="70%" style="stop-color:#ff9800" />
-        <stop offset="100%" style="stop-color:#ff5722" />
-       </radialgradient>
-      </defs> <circle cx="50" cy="50" r="45" fill="url(#sunGradient)" /> <circle cx="35" cy="35" r="3" fill="#fff" opacity="0.8" /> <circle cx="65" cy="40" r="2" fill="#fff" opacity="0.6" /> <circle cx="45" cy="65" r="2.5" fill="#fff" opacity="0.7" />
-     </svg>
-     <div class="planet-name">
-      Sol
-     </div>
-    </div>
-    <div class="celestial-body" onclick="showInfo('mercurio')">
-     <svg class="planet-image" viewbox="0 0 100 100"><defs>
-       <radialgradient id="mercuryGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" style="stop-color:#d4af37" />
-        <stop offset="100%" style="stop-color:#8b7355" />
-       </radialgradient>
-      </defs> <circle cx="50" cy="50" r="40" fill="url(#mercuryGradient)" /> <circle cx="35" cy="40" r="3" fill="#696969" opacity="0.7" /> <circle cx="60" cy="35" r="2" fill="#696969" opacity="0.5" /> <circle cx="45" cy="65" r="2.5" fill="#696969" opacity="0.6" />
-     </svg>
-     <div class="planet-name">
-      Mercúrio
-     </div>
-    </div>
-    <div class="celestial-body" onclick="showInfo('venus')">
-     <svg class="planet-image" viewbox="0 0 100 100"><defs>
-       <radialgradient id="venusGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" style="stop-color:#ffc649" />
-        <stop offset="100%" style="stop-color:#ff8f00" />
-       </radialgradient>
-      </defs> <circle cx="50" cy="50" r="40" fill="url(#venusGradient)" /> <circle cx="40" cy="35" r="4" fill="#ffb74d" opacity="0.8" /> <circle cx="65" cy="55" r="3" fill="#ffb74d" opacity="0.6" />
-     </svg>
-     <div class="planet-name">
-      Vênus
-     </div>
-    </div>
-    <div class="celestial-body" onclick="showInfo('terra')">
-     <svg class="planet-image" viewbox="0 0 100 100"><defs>
-       <radialgradient id="earthGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" style="stop-color:#4fc3f7" />
-        <stop offset="100%" style="stop-color:#1976d2" />
-       </radialgradient>
-      </defs> <circle cx="50" cy="50" r="40" fill="url(#earthGradient)" /> <path d="M25 35 Q35 30 45 35 Q55 40 65 35 Q70 45 65 55 Q55 60 45 55 Q35 50 25 55 Z" fill="#4caf50" /> <path d="M30 60 Q40 65 50 60 Q60 55 70 60 Q65 70 55 75 Q45 70 35 75 Q25 70 30 60 Z" fill="#4caf50" /> <circle cx="60" cy="25" r="8" fill="#fff" opacity="0.3" />
-     </svg>
-     <div class="planet-name">
-      Terra
-     </div>
-    </div>
-    <div class="celestial-body" onclick="showInfo('marte')">
-     <svg class="planet-image" viewbox="0 0 100 100"><defs>
-       <radialgradient id="marsGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" style="stop-color:#ff7043" />
-        <stop offset="100%" style="stop-color:#d32f2f" />
-       </radialgradient>
-      </defs> <circle cx="50" cy="50" r="40" fill="url(#marsGradient)" /> <circle cx="35" cy="40" r="4" fill="#8d4004" opacity="0.8" /> <circle cx="60" cy="30" r="3" fill="#8d4004" opacity="0.6" /> <circle cx="40" cy="65" r="2" fill="#8d4004" opacity="0.7" /> <ellipse cx="55" cy="60" rx="8" ry="3" fill="#bf360c" opacity="0.5" />
-     </svg>
-     <div class="planet-name">
-      Marte
-     </div>
-    </div>
-    <div class="celestial-body" onclick="showInfo('jupiter')">
-     <svg class="planet-image" viewbox="0 0 100 100"><defs>
-       <radialgradient id="jupiterGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" style="stop-color:#ffb74d" />
-        <stop offset="100%" style="stop-color:#ff8f00" />
-       </radialgradient>
-      </defs> <circle cx="50" cy="50" r="40" fill="url(#jupiterGradient)" /> <ellipse cx="50" cy="35" rx="35" ry="4" fill="#d84315" opacity="0.7" /> <ellipse cx="50" cy="50" rx="35" ry="3" fill="#bf360c" opacity="0.6" /> <ellipse cx="50" cy="65" rx="35" ry="4" fill="#d84315" opacity="0.8" /> <circle cx="35" cy="45" r="6" fill="#8d4004" opacity="0.9" />
-     </svg>
-     <div class="planet-name">
-      Júpiter
-     </div>
-    </div>
-    <div class="celestial-body" onclick="showInfo('saturno')">
-     <svg class="planet-image" viewbox="0 0 100 100"><defs>
-       <radialgradient id="saturnGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" style="stop-color:#ffcc02" />
-        <stop offset="100%" style="stop-color:#ff8f00" />
-       </radialgradient>
-      </defs> <ellipse cx="50" cy="50" rx="45" ry="8" fill="none" stroke="#ddd" stroke-width="2" opacity="0.8" /> <ellipse cx="50" cy="50" rx="38" ry="6" fill="none" stroke="#bbb" stroke-width="1" opacity="0.6" /> <circle cx="50" cy="50" r="25" fill="url(#saturnGradient)" /> <ellipse cx="50" cy="45" rx="20" ry="2" fill="#d84315" opacity="0.6" /> <ellipse cx="50" cy="55" rx="20" ry="2" fill="#bf360c" opacity="0.5" />
-     </svg>
-     <div class="planet-name">
-      Saturno
-     </div>
-    </div>
-    <div class="celestial-body" onclick="showInfo('urano')">
-     <svg class="planet-image" viewbox="0 0 100 100"><defs>
-       <radialgradient id="uranusGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" style="stop-color:#4fc3f7" />
-        <stop offset="100%" style="stop-color:#0277bd" />
-       </radialgradient>
-      </defs> <circle cx="50" cy="50" r="40" fill="url(#uranusGradient)" /> <circle cx="40" cy="40" r="3" fill="#81d4fa" opacity="0.8" /> <circle cx="60" cy="35" r="2" fill="#81d4fa" opacity="0.6" /> <circle cx="45" cy="65" r="2.5" fill="#81d4fa" opacity="0.7" />
-     </svg>
-     <div class="planet-name">
-      Urano
-     </div>
-    </div>
-    <div class="celestial-body" onclick="showInfo('netuno')">
-     <svg class="planet-image" viewbox="0 0 100 100"><defs>
-       <radialgradient id="neptuneGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" style="stop-color:#3f51b5" />
-        <stop offset="100%" style="stop-color:#1a237e" />
-       </radialgradient>
-      </defs> <circle cx="50" cy="50" r="40" fill="url(#neptuneGradient)" /> <circle cx="35" cy="40" r="4" fill="#5c6bc0" opacity="0.8" /> <circle cx="65" cy="35" r="3" fill="#5c6bc0" opacity="0.6" /> <ellipse cx="50" cy="60" rx="15" ry="5" fill="#303f9f" opacity="0.7" />
-     </svg>
-     <div class="planet-name">
-      Netuno
-     </div>
-    </div>
-   </section>
-   <section class="info-panel" id="infoPanel">
-    <h2 class="info-title" id="infoPanelTitle">Informações do Planeta</h2>
-    <div class="info-grid" id="infoContent"></div><button class="close-btn" onclick="closeInfo()">Fechar</button>
-   </section><!-- Modal para adicionar informações -->
-   <div class="modal-overlay" id="addModal" style="display: none;">
-    <div class="modal-content">
-     <div class="modal-header">
-      <h2>Adicionar Nova Informação</h2><button onclick="closeAddModal()" class="modal-close">✕</button>
-     </div>
-     <form id="addForm" class="add-form">
-      <div class="form-row">
-       <div class="form-group"><label for="bodyName">Nome do Corpo Celeste *</label> <input type="text" id="bodyName" required>
-       </div>
-       <div class="form-group"><label for="bodyCategory">Categoria *</label> <select id="bodyCategory" onchange="toggleParentPlanet()" required> <option value="">Selecione...</option> <option value="star">Estrela</option> <option value="planet">Planeta</option> <option value="moon">Lua</option> </select>
-       </div>
-      </div>
-      <div class="form-group" id="parentPlanetGroup" style="display: none;"><label for="parentPlanet">Planeta Principal *</label> <select id="parentPlanet"> <option value="">Selecione o planeta...</option> </select>
-      </div>
-      <div class="form-row">
-       <div class="form-group"><label for="bodyType">Tipo</label> <input type="text" id="bodyType" placeholder="Ex: Planeta Rochoso, Gigante Gasoso">
-       </div>
-       <div class="form-group"><label for="bodyDistance">Distância</label> <input type="text" id="bodyDistance" placeholder="Ex: 149.600.000 km do Sol">
-       </div>
-      </div>
-      <div class="form-row">
-       <div class="form-group"><label for="bodyDiameter">Diâmetro</label> <input type="text" id="bodyDiameter" placeholder="Ex: 12.756 km">
-       </div>
-       <div class="form-group"><label for="bodyMass">Massa</label> <input type="text" id="bodyMass" placeholder="Ex: 5.972 × 10²⁴ kg">
-       </div>
-      </div>
-      <div class="form-row">
-       <div class="form-group"><label for="bodyTemperature">Temperatura</label> <input type="text" id="bodyTemperature" placeholder="Ex: -89°C a 58°C">
-       </div>
-       <div class="form-group"><label for="bodyMoons">Número de Luas</label> <input type="text" id="bodyMoons" placeholder="Ex: 1, 95 conhecidas">
-       </div>
-      </div>
-      <div class="form-group"><label for="bodyComposition">Composição</label> <input type="text" id="bodyComposition" placeholder="Ex: 73% hidrogênio, 25% hélio">
-      </div>
-      <div class="form-group"><label for="bodyImageUrl">URL da Imagem</label> <input type="url" id="bodyImageUrl" placeholder="https://exemplo.com/imagem.jpg"> <small>Cole o link de uma imagem do corpo celeste</small>
-      </div>
-      <div class="form-group"><label for="bodyCuriosities">Curiosidades *</label> <textarea id="bodyCuriosities" rows="4" placeholder="Descreva fatos interessantes sobre este corpo celeste..." required></textarea>
-      </div>
-      <div class="form-actions"><button type="button" onclick="closeAddModal()" class="btn-cancel">Cancelar</button> <button type="submit" class="btn-save" id="saveBtn"> <span class="btn-text">Salvar Informação</span> <span class="btn-loading" style="display: none;">Salvando...</span> </button>
-      </div>
-     </form>
-    </div>
-   </div>
-  </main>
-  <script>
-        const defaultConfig = {
-            main_title: "Sistema Solar Interativo",
-            subtitle: "Clique nos planetas para explorar suas características",
-            info_panel_title: "Informações do Planeta"
-        };
+        .planet-thumb { 
+            transition: all 0.5s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
 
-        let userCelestialBodies = [];
-        let currentFilter = 'all';
+        .celestial-item:hover .planet-thumb { 
+            box-shadow: 0 0 35px rgba(59, 130, 246, 0.6); /* Brilho neon azul */
+            border-color: rgba(59, 130, 246, 0.8);
+        }
 
-        const planetData = {
-            sol: {
-                nome: "Sol",
-                tipo: "Estrela",
-                distancia: "0 km (centro do sistema)",
-                diametro: "1.392.700 km",
-                massa: "1.989 × 10³⁰ kg",
-                temperatura: "5.778 K (superfície)",
-                composicao: "73% hidrogênio, 25% hélio",
-                curiosidades: "O Sol contém 99,86% da massa do Sistema Solar e produz energia através da fusão nuclear."
-            },
-            mercurio: {
-                nome: "Mercúrio",
-                tipo: "Planeta Rochoso",
-                distancia: "57.910.000 km do Sol",
-                diametro: "4.879 km",
-                massa: "3.301 × 10²³ kg",
-                temperatura: "-173°C a 427°C",
-                luas: "0",
-                curiosidades: "É o planeta mais próximo do Sol e tem o menor período orbital (88 dias terrestres). Não possui luas devido à proximidade com o Sol."
-            },
-            venus: {
-                nome: "Vênus",
-                tipo: "Planeta Rochoso",
-                distancia: "108.200.000 km do Sol",
-                diametro: "12.104 km",
-                massa: "4.867 × 10²⁴ kg",
-                temperatura: "462°C (constante)",
-                luas: "0",
-                curiosidades: "É o planeta mais quente do Sistema Solar devido ao efeito estufa extremo em sua atmosfera. Não possui luas naturais."
-            },
-            terra: {
-                nome: "Terra",
-                tipo: "Planeta Rochoso",
-                distancia: "149.600.000 km do Sol",
-                diametro: "12.756 km",
-                massa: "5.972 × 10²⁴ kg",
-                temperatura: "-89°C a 58°C",
-                luas: "1 (Lua)",
-                curiosidades: "É o único planeta conhecido que abriga vida e tem 71% de sua superfície coberta por água.",
-                luasDetalhes: {
-                    "Lua": {
-                        diametro: "3.474 km",
-                        distancia: "384.400 km da Terra",
-                        periodo: "27,3 dias terrestres",
-                        temperatura: "-233°C a 123°C",
-                        curiosidades: "A Lua é responsável pelas marés terrestres e está se afastando da Terra cerca de 3,8 cm por ano. É o quinto maior satélite natural do Sistema Solar."
-                    }
-                }
-            },
-            marte: {
-                nome: "Marte",
-                tipo: "Planeta Rochoso",
-                distancia: "227.900.000 km do Sol",
-                diametro: "6.792 km",
-                massa: "6.39 × 10²³ kg",
-                temperatura: "-87°C a -5°C",
-                luas: "2 (Fobos e Deimos)",
-                curiosidades: "Conhecido como 'Planeta Vermelho' devido ao óxido de ferro em sua superfície.",
-                luasDetalhes: {
-                    "Fobos": {
-                        diametro: "22,5 km",
-                        distancia: "9.376 km de Marte",
-                        periodo: "7,6 horas",
-                        temperatura: "-4°C a -112°C",
-                        curiosidades: "É a maior lua de Marte e orbita tão rapidamente que nasce no oeste e se põe no leste. Está se aproximando de Marte e pode colidir com o planeta em 50 milhões de anos."
-                    },
-                    "Deimos": {
-                        diametro: "12,4 km",
-                        distancia: "23.463 km de Marte",
-                        periodo: "30,3 horas",
-                        temperatura: "-40°C a -4°C",
-                        curiosidades: "É a menor e mais distante lua de Marte. Seu nome significa 'terror' em grego. Tem formato irregular e superfície coberta de poeira."
-                    }
-                }
-            },
-            jupiter: {
-                nome: "Júpiter",
-                tipo: "Gigante Gasoso",
-                distancia: "778.500.000 km do Sol",
-                diametro: "142.984 km",
-                massa: "1.898 × 10²⁷ kg",
-                temperatura: "-108°C",
-                luas: "95 conhecidas",
-                curiosidades: "É o maior planeta do Sistema Solar e tem uma grande mancha vermelha que é uma tempestade gigante.",
-                luasDetalhes: {
-                    "Io": {
-                        diametro: "3.643 km",
-                        distancia: "421.700 km de Júpiter",
-                        periodo: "1,8 dias terrestres",
-                        temperatura: "-143°C a -73°C",
-                        curiosidades: "É o corpo mais vulcanicamente ativo do Sistema Solar, com mais de 400 vulcões ativos. Sua superfície é constantemente renovada pela atividade vulcânica."
-                    },
-                    "Europa": {
-                        diametro: "3.121 km",
-                        distancia: "671.034 km de Júpiter",
-                        periodo: "3,5 dias terrestres",
-                        temperatura: "-160°C a -120°C",
-                        curiosidades: "Possui um oceano subterrâneo sob sua crosta de gelo que pode conter mais água que todos os oceanos da Terra juntos. É considerada um dos locais mais promissores para buscar vida."
-                    },
-                    "Ganimedes": {
-                        diametro: "5.268 km",
-                        distancia: "1.070.412 km de Júpiter",
-                        periodo: "7,2 dias terrestres",
-                        temperatura: "-180°C a -120°C",
-                        curiosidades: "É a maior lua do Sistema Solar, maior que Mercúrio. Possui seu próprio campo magnético e pode ter um oceano subterrâneo."
-                    },
-                    "Calisto": {
-                        diametro: "4.821 km",
-                        distancia: "1.882.709 km de Júpiter",
-                        periodo: "16,7 dias terrestres",
-                        temperatura: "-193°C a -108°C",
-                        curiosidades: "É a lua mais cratejada do Sistema Solar e pode ter um oceano subterrâneo. Sua superfície não mudou muito nos últimos 4 bilhões de anos."
-                    },
-                    "Amalteia": {
-                        diametro: "167 km",
-                        distancia: "181.365 km de Júpiter",
-                        periodo: "0,5 dias terrestres",
-                        temperatura: "-145°C",
-                        curiosidades: "É a quinta maior lua de Júpiter e tem formato irregular. Sua superfície é vermelha devido ao enxofre de Io."
-                    },
-                    "Himalia": {
-                        diametro: "139 km",
-                        distancia: "11.460.000 km de Júpiter",
-                        periodo: "250,6 dias terrestres",
-                        temperatura: "-150°C",
-                        curiosidades: "É a maior lua do grupo Himalia e provavelmente um asteroide capturado. Tem órbita retrógrada e irregular."
-                    },
-                    "Tebe": {
-                        diametro: "99 km",
-                        distancia: "221.889 km de Júpiter",
-                        periodo: "0,7 dias terrestres",
-                        temperatura: "-140°C",
-                        curiosidades: "É uma das luas internas de Júpiter e contribui para o anel de poeira do planeta."
-                    },
-                    "Adrasteia": {
-                        diametro: "16 km",
-                        distancia: "129.000 km de Júpiter",
-                        periodo: "0,3 dias terrestres",
-                        temperatura: "-145°C",
-                        curiosidades: "É a segunda lua mais próxima de Júpiter e orbita dentro do anel principal do planeta."
-                    },
-                    "Métis": {
-                        diametro: "43 km",
-                        distancia: "128.000 km de Júpiter",
-                        periodo: "0,3 dias terrestres",
-                        temperatura: "-145°C",
-                        curiosidades: "É a lua mais próxima de Júpiter e orbita mais rápido que a rotação do planeta."
-                    },
-                    "Lisiteia": {
-                        diametro: "36 km",
-                        distancia: "11.720.000 km de Júpiter",
-                        periodo: "259,2 dias terrestres",
-                        temperatura: "-150°C",
-                        curiosidades: "Faz parte do grupo Himalia e tem órbita retrógrada. Provavelmente é um fragmento de um corpo maior."
-                    },
-                    "Elara": {
-                        diametro: "86 km",
-                        distancia: "11.740.000 km de Júpiter",
-                        periodo: "259,7 dias terrestres",
-                        temperatura: "-150°C",
-                        curiosidades: "Pertence ao grupo Himalia e foi descoberta em 1905. Tem coloração avermelhada."
-                    },
-                    "Ananke": {
-                        diametro: "28 km",
-                        distancia: "21.280.000 km de Júpiter",
-                        periodo: "631 dias terrestres (retrógrado)",
-                        temperatura: "-155°C",
-                        curiosidades: "É a maior lua do grupo Ananke e tem órbita retrógrada muito excêntrica."
-                    },
-                    "Carme": {
-                        diametro: "46 km",
-                        distancia: "22.600.000 km de Júpiter",
-                        periodo: "692 dias terrestres (retrógrado)",
-                        temperatura: "-155°C",
-                        curiosidades: "É a maior lua do grupo Carme e provavelmente um asteroide capturado."
-                    },
-                    "Pasife": {
-                        diametro: "60 km",
-                        distancia: "23.500.000 km de Júpiter",
-                        periodo: "735 dias terrestres (retrógrado)",
-                        temperatura: "-155°C",
-                        curiosidades: "É a maior lua do grupo Pasife e tem a órbita mais distante entre as luas irregulares de Júpiter."
-                    },
-                    "Sinope": {
-                        diametro: "38 km",
-                        distancia: "23.940.000 km de Júpiter",
-                        periodo: "758 dias terrestres (retrógrado)",
-                        temperatura: "-155°C",
-                        curiosidades: "Pertence ao grupo Pasife e foi a lua mais distante conhecida de Júpiter por muitos anos."
-                    }
-                }
-            },
-            saturno: {
-                nome: "Saturno",
-                tipo: "Gigante Gasoso",
-                distancia: "1.432.000.000 km do Sol",
-                diametro: "120.536 km",
-                massa: "5.683 × 10²⁶ kg",
-                temperatura: "-139°C",
-                luas: "146 conhecidas",
-                curiosidades: "Famoso por seus anéis espetaculares compostos principalmente de gelo e rocha.",
-                luasDetalhes: {
-                    "Titã": {
-                        diametro: "5.149 km",
-                        distancia: "1.221.830 km de Saturno",
-                        periodo: "15,9 dias terrestres",
-                        temperatura: "-179°C",
-                        curiosidades: "É a segunda maior lua do Sistema Solar e a única com atmosfera densa. Possui lagos e rios de metano líquido e é considerada similar à Terra primitiva."
-                    },
-                    "Encélado": {
-                        diametro: "504 km",
-                        distancia: "238.020 km de Saturno",
-                        periodo: "1,4 dias terrestres",
-                        temperatura: "-201°C a -128°C",
-                        curiosidades: "Possui gêiseres de vapor d'água que jorram de sua superfície gelada, indicando um oceano subterrâneo. É um dos principais candidatos para abrigar vida microbiana."
-                    },
-                    "Mimas": {
-                        diametro: "396 km",
-                        distancia: "185.539 km de Saturno",
-                        periodo: "0,9 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "Conhecida como 'Estrela da Morte' devido à cratera Herschel que domina sua superfície. Esta cratera tem 130 km de diâmetro, quase 1/3 do diâmetro da lua."
-                    },
-                    "Iapetus": {
-                        diametro: "1.469 km",
-                        distancia: "3.561.300 km de Saturno",
-                        periodo: "79,3 dias terrestres",
-                        temperatura: "-230°C a -143°C",
-                        curiosidades: "Possui uma coloração única: um lado é escuro como carvão e o outro é brilhante como neve. Tem uma cordilheira equatorial que lhe dá aparência de noz."
-                    },
-                    "Reia": {
-                        diametro: "1.527 km",
-                        distancia: "527.108 km de Saturno",
-                        periodo: "4,5 dias terrestres",
-                        temperatura: "-174°C a -220°C",
-                        curiosidades: "É a segunda maior lua de Saturno e possui um sistema de anéis próprio. Sua superfície é coberta de crateras de impacto."
-                    },
-                    "Dione": {
-                        diametro: "1.123 km",
-                        distancia: "377.396 km de Saturno",
-                        periodo: "2,7 dias terrestres",
-                        temperatura: "-186°C",
-                        curiosidades: "Possui penhascos brilhantes chamados 'wispy terrain' e pode ter um oceano subterrâneo. Tem densidade maior que a água."
-                    },
-                    "Tétis": {
-                        diametro: "1.062 km",
-                        distancia: "294.619 km de Saturno",
-                        periodo: "1,9 dias terrestres",
-                        temperatura: "-187°C",
-                        curiosidades: "Possui uma enorme cratera chamada Odysseus com 400 km de diâmetro e um grande cânion chamado Ithaca Chasma."
-                    },
-                    "Jápeto": {
-                        diametro: "1.469 km",
-                        distancia: "3.561.300 km de Saturno",
-                        periodo: "79,3 dias terrestres",
-                        temperatura: "-230°C a -143°C",
-                        curiosidades: "Mesmo que Iapetus - possui coloração única com um lado escuro e outro brilhante."
-                    },
-                    "Febe": {
-                        diametro: "213 km",
-                        distancia: "12.952.000 km de Saturno",
-                        periodo: "550,5 dias terrestres (retrógrado)",
-                        temperatura: "-163°C",
-                        curiosidades: "É provavelmente um objeto capturado do Cinturão de Kuiper. Tem órbita retrógrada e composição diferente das outras luas."
-                    },
-                    "Jano": {
-                        diametro: "179 km",
-                        distancia: "151.472 km de Saturno",
-                        periodo: "0,7 dias terrestres",
-                        temperatura: "-195°C",
-                        curiosidades: "Compartilha sua órbita com Epimeteu em uma dança orbital única, trocando posições a cada 4 anos."
-                    },
-                    "Epimeteu": {
-                        diametro: "113 km",
-                        distancia: "151.422 km de Saturno",
-                        periodo: "0,7 dias terrestres",
-                        temperatura: "-195°C",
-                        curiosidades: "Compartilha órbita com Jano. Quando se aproximam, trocam energia orbital e posições."
-                    },
-                    "Prometeu": {
-                        diametro: "86 km",
-                        distancia: "139.380 km de Saturno",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-198°C",
-                        curiosidades: "É uma das luas pastoras do anel F de Saturno, ajudando a manter sua estrutura."
-                    },
-                    "Pandora": {
-                        diametro: "81 km",
-                        distancia: "141.720 km de Saturno",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-198°C",
-                        curiosidades: "Junto com Prometeu, é uma lua pastora do anel F, mantendo as partículas do anel em linha."
-                    },
-                    "Atlas": {
-                        diametro: "30 km",
-                        distancia: "137.670 km de Saturno",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-198°C",
-                        curiosidades: "Tem formato de disco voador devido ao material acumulado em seu equador. É uma lua pastora do anel A."
-                    },
-                    "Pan": {
-                        diametro: "28 km",
-                        distancia: "133.583 km de Saturno",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-198°C",
-                        curiosidades: "Orbita dentro da divisão de Encke no anel A e tem formato de ravioli devido ao material acumulado."
-                    },
-                    "Calipso": {
-                        diametro: "21 km",
-                        distancia: "294.619 km de Saturno",
-                        periodo: "1,9 dias terrestres",
-                        temperatura: "-187°C",
-                        curiosidades: "É uma lua troiana de Tétis, orbitando 60° atrás dela no mesmo caminho orbital."
-                    },
-                    "Telesto": {
-                        diametro: "25 km",
-                        distancia: "294.619 km de Saturno",
-                        periodo: "1,9 dias terrestres",
-                        temperatura: "-187°C",
-                        curiosidades: "É uma lua troiana de Tétis, orbitando 60° à frente dela no mesmo caminho orbital."
-                    },
-                    "Helena": {
-                        diametro: "33 km",
-                        distancia: "377.396 km de Saturno",
-                        periodo: "2,7 dias terrestres",
-                        temperatura: "-186°C",
-                        curiosidades: "É uma lua troiana de Dione, compartilhando sua órbita 60° à frente."
-                    },
-                    "Polydeuces": {
-                        diametro: "1,3 km",
-                        distancia: "377.396 km de Saturno",
-                        periodo: "2,7 dias terrestres",
-                        temperatura: "-186°C",
-                        curiosidades: "É uma pequena lua troiana de Dione, orbitando 60° atrás dela."
-                    }
-                }
-            },
-            urano: {
-                nome: "Urano",
-                tipo: "Gigante de Gelo",
-                distancia: "2.867.000.000 km do Sol",
-                diametro: "51.118 km",
-                massa: "8.681 × 10²⁵ kg",
-                temperatura: "-197°C",
-                luas: "27 conhecidas",
-                curiosidades: "Gira de lado em relação ao seu plano orbital e tem anéis verticais.",
-                luasDetalhes: {
-                    "Miranda": {
-                        diametro: "471 km",
-                        distancia: "129.390 km de Urano",
-                        periodo: "1,4 dias terrestres",
-                        temperatura: "-187°C",
-                        curiosidades: "Possui a superfície mais variada e estranha entre as luas de Urano, com penhascos de até 20 km de altura. Parece ter sido despedaçada e remontada várias vezes."
-                    },
-                    "Ariel": {
-                        diametro: "1.157 km",
-                        distancia: "190.900 km de Urano",
-                        periodo: "2,5 dias terrestres",
-                        temperatura: "-213°C a -193°C",
-                        curiosidades: "É a mais brilhante das luas de Urano e possui vales profundos e planícies relativamente jovens, indicando atividade geológica passada."
-                    },
-                    "Umbriel": {
-                        diametro: "1.169 km",
-                        distancia: "266.000 km de Urano",
-                        periodo: "4,1 dias terrestres",
-                        temperatura: "-198°C",
-                        curiosidades: "É a lua mais escura de Urano e possui uma misteriosa formação brilhante em forma de anel chamada Wunda, que pode ser uma cratera de impacto."
-                    },
-                    "Titânia": {
-                        diametro: "1.577 km",
-                        distancia: "436.300 km de Urano",
-                        periodo: "8,7 dias terrestres",
-                        temperatura: "-203°C a -184°C",
-                        curiosidades: "É a maior lua de Urano e possui enormes cânions que se estendem por centenas de quilômetros, evidência de atividade tectônica passada."
-                    },
-                    "Oberon": {
-                        diametro: "1.523 km",
-                        distancia: "583.520 km de Urano",
-                        periodo: "13,5 dias terrestres",
-                        temperatura: "-198°C",
-                        curiosidades: "É a segunda maior lua de Urano e a mais distante das grandes luas. Possui muitas crateras antigas e uma misteriosa montanha de 6 km de altura."
-                    },
-                    "Cordélia": {
-                        diametro: "40 km",
-                        distancia: "49.770 km de Urano",
-                        periodo: "0,3 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "É a lua mais interna de Urano e uma das luas pastoras do anel épsilon."
-                    },
-                    "Ofélia": {
-                        diametro: "43 km",
-                        distancia: "53.790 km de Urano",
-                        periodo: "0,4 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "Junto com Cordélia, é uma lua pastora do anel épsilon de Urano."
-                    },
-                    "Bianca": {
-                        diametro: "51 km",
-                        distancia: "59.170 km de Urano",
-                        periodo: "0,4 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "É uma das luas internas de Urano, descoberta pela Voyager 2 em 1986."
-                    },
-                    "Créssida": {
-                        diametro: "80 km",
-                        distancia: "61.780 km de Urano",
-                        periodo: "0,5 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "É uma das maiores luas internas de Urano e tem formato irregular."
-                    },
-                    "Desdêmona": {
-                        diametro: "64 km",
-                        distancia: "62.680 km de Urano",
-                        periodo: "0,5 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "Nomeada em homenagem à personagem de Shakespeare, como todas as luas de Urano."
-                    },
-                    "Julieta": {
-                        diametro: "94 km",
-                        distancia: "64.350 km de Urano",
-                        periodo: "0,5 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "É uma das luas internas maiores de Urano, nomeada pela heroína de Romeu e Julieta."
-                    },
-                    "Pórcia": {
-                        diametro: "135 km",
-                        distancia: "66.090 km de Urano",
-                        periodo: "0,5 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "É a maior das luas internas de Urano, nomeada pela personagem de O Mercador de Veneza."
-                    },
-                    "Rosalinda": {
-                        diametro: "72 km",
-                        distancia: "69.940 km de Urano",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "Nomeada pela heroína de Como Quiserem, de Shakespeare."
-                    },
-                    "Cupido": {
-                        diametro: "18 km",
-                        distancia: "74.800 km de Urano",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "É uma das menores luas conhecidas de Urano, descoberta em 2003."
-                    },
-                    "Belinda": {
-                        diametro: "90 km",
-                        distancia: "75.260 km de Urano",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "Nomeada pela personagem de O Estupro da Madeixa, de Alexander Pope."
-                    },
-                    "Perdita": {
-                        diametro: "30 km",
-                        distancia: "76.420 km de Urano",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "Foi perdida após sua descoberta inicial e redescoberta anos depois, daí seu nome."
-                    },
-                    "Puck": {
-                        diametro: "162 km",
-                        distancia: "86.010 km de Urano",
-                        periodo: "0,8 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "É a maior das luas internas de Urano e tem superfície escura. Nomeada pelo personagem de Sonho de uma Noite de Verão."
-                    },
-                    "Mab": {
-                        diametro: "25 km",
-                        distancia: "97.734 km de Urano",
-                        periodo: "1,0 dias terrestres",
-                        temperatura: "-200°C",
-                        curiosidades: "É associada ao anel μ (mu) de Urano e pode ser a fonte de suas partículas."
-                    },
-                    "Francisco": {
-                        diametro: "22 km",
-                        distancia: "4.276.000 km de Urano",
-                        periodo: "266,6 dias terrestres",
-                        temperatura: "-220°C",
-                        curiosidades: "É uma das luas irregulares externas de Urano, descoberta em 2001."
-                    },
-                    "Caliban": {
-                        diametro: "72 km",
-                        distancia: "7.231.000 km de Urano",
-                        periodo: "579,7 dias terrestres (retrógrado)",
-                        temperatura: "-220°C",
-                        curiosidades: "Tem órbita retrógrada e é provavelmente um objeto capturado. Nomeado pelo personagem de A Tempestade."
-                    },
-                    "Stephano": {
-                        diametro: "32 km",
-                        distancia: "8.004.000 km de Urano",
-                        periodo: "677,4 dias terrestres",
-                        temperatura: "-220°C",
-                        curiosidades: "É uma lua irregular externa com órbita excêntrica."
-                    },
-                    "Trinculo": {
-                        diametro: "18 km",
-                        distancia: "8.504.000 km de Urano",
-                        periodo: "749,2 dias terrestres",
-                        temperatura: "-220°C",
-                        curiosidades: "É uma pequena lua irregular, nomeada por outro personagem de A Tempestade."
-                    },
-                    "Sycorax": {
-                        diametro: "150 km",
-                        distancia: "12.179.000 km de Urano",
-                        periodo: "1288,3 dias terrestres (retrógrado)",
-                        temperatura: "-220°C",
-                        curiosidades: "É a maior lua irregular de Urano e tem órbita retrógrada muito distante."
-                    },
-                    "Margaret": {
-                        diametro: "20 km",
-                        distancia: "14.345.000 km de Urano",
-                        periodo: "1687,0 dias terrestres",
-                        temperatura: "-220°C",
-                        curiosidades: "É uma das luas mais distantes de Urano, descoberta em 2003."
-                    },
-                    "Prospero": {
-                        diametro: "50 km",
-                        distancia: "16.256.000 km de Urano",
-                        periodo: "1978,3 dias terrestres (retrógrado)",
-                        temperatura: "-220°C",
-                        curiosidades: "Tem órbita retrógrada e é nomeado pelo protagonista de A Tempestade."
-                    },
-                    "Setebos": {
-                        diametro: "48 km",
-                        distancia: "17.418.000 km de Urano",
-                        periodo: "2225,2 dias terrestres (retrógrado)",
-                        temperatura: "-220°C",
-                        curiosidades: "É uma lua irregular com órbita retrógrada muito excêntrica."
-                    },
-                    "Ferdinand": {
-                        diametro: "20 km",
-                        distancia: "20.901.000 km de Urano",
-                        periodo: "2887,2 dias terrestres (retrógrado)",
-                        temperatura: "-220°C",
-                        curiosidades: "É a lua mais distante conhecida de Urano, descoberta em 2001."
-                    }
-                }
-            },
-            netuno: {
-                nome: "Netuno",
-                tipo: "Gigante de Gelo",
-                distancia: "4.515.000.000 km do Sol",
-                diametro: "49.528 km",
-                massa: "1.024 × 10²⁶ kg",
-                temperatura: "-201°C",
-                luas: "16 conhecidas",
-                curiosidades: "Tem os ventos mais fortes do Sistema Solar, chegando a 2.100 km/h.",
-                luasDetalhes: {
-                    "Tritão": {
-                        diametro: "2.706 km",
-                        distancia: "354.759 km de Netuno",
-                        periodo: "5,9 dias terrestres (retrógrado)",
-                        temperatura: "-235°C",
-                        curiosidades: "É a única grande lua do Sistema Solar com órbita retrógrada. Possui gêiseres de nitrogênio e provavelmente foi um objeto do Cinturão de Kuiper capturado por Netuno."
-                    },
-                    "Nereida": {
-                        diametro: "340 km",
-                        distancia: "5.513.818 km de Netuno",
-                        periodo: "360,1 dias terrestres",
-                        temperatura: "-223°C",
-                        curiosidades: "Possui a órbita mais excêntrica de todas as luas conhecidas no Sistema Solar. Sua distância de Netuno varia de 1,4 milhão a 9,6 milhões de km."
-                    },
-                    "Proteu": {
-                        diametro: "418 km",
-                        distancia: "117.647 km de Netuno",
-                        periodo: "1,1 dias terrestres",
-                        temperatura: "-230°C",
-                        curiosidades: "É a segunda maior lua de Netuno e tem formato irregular. É uma das luas mais escuras do Sistema Solar, refletindo apenas 6% da luz solar."
-                    },
-                    "Náiade": {
-                        diametro: "66 km",
-                        distancia: "48.227 km de Netuno",
-                        periodo: "0,3 dias terrestres",
-                        temperatura: "-235°C",
-                        curiosidades: "É a lua mais interna de Netuno e orbita muito próxima ao planeta, dentro do limite de Roche."
-                    },
-                    "Talassa": {
-                        diametro: "82 km",
-                        distancia: "50.075 km de Netuno",
-                        periodo: "0,3 dias terrestres",
-                        temperatura: "-235°C",
-                        curiosidades: "É uma das luas internas de Netuno, descoberta pela Voyager 2 em 1989."
-                    },
-                    "Despina": {
-                        diametro: "150 km",
-                        distancia: "52.526 km de Netuno",
-                        periodo: "0,3 dias terrestres",
-                        temperatura: "-235°C",
-                        curiosidades: "É a terceira maior lua interna de Netuno e tem formato irregular."
-                    },
-                    "Galateia": {
-                        diametro: "175 km",
-                        distancia: "61.953 km de Netuno",
-                        periodo: "0,4 dias terrestres",
-                        temperatura: "-235°C",
-                        curiosidades: "É uma das luas pastoras dos anéis de Netuno, ajudando a confinar as partículas."
-                    },
-                    "Larissa": {
-                        diametro: "194 km",
-                        distancia: "73.548 km de Netuno",
-                        periodo: "0,6 dias terrestres",
-                        temperatura: "-235°C",
-                        curiosidades: "É a quinta maior lua de Netuno e foi descoberta em 1981 durante uma ocultação estelar."
-                    },
-                    "Hipocampo": {
-                        diametro: "35 km",
-                        distancia: "105.283 km de Netuno",
-                        periodo: "0,9 dias terrestres",
-                        temperatura: "-235°C",
-                        curiosidades: "É a mais recente lua descoberta de Netuno (2013) e pode ser um fragmento de Proteu."
-                    },
-                    "Halimede": {
-                        diametro: "62 km",
-                        distancia: "16.611.000 km de Netuno",
-                        periodo: "1879,7 dias terrestres",
-                        temperatura: "-220°C",
-                        curiosidades: "É uma lua irregular externa com órbita muito excêntrica e inclinada."
-                    },
-                    "Sao": {
-                        diametro: "44 km",
-                        distancia: "22.228.000 km de Netuno",
-                        periodo: "2912,7 dias terrestres",
-                        temperatura: "-220°C",
-                        curiosidades: "É uma das luas irregulares mais distantes de Netuno, descoberta em 2002."
-                    },
-                    "Laomedeia": {
-                        diametro: "42 km",
-                        distancia: "23.571.000 km de Netuno",
-                        periodo: "3167,9 dias terrestres",
-                        temperatura: "-220°C",
-                        curiosidades: "É uma lua irregular com órbita retrógrada e muito excêntrica."
-                    },
-                    "Psamate": {
-                        diametro: "40 km",
-                        distancia: "46.695.000 km de Netuno",
-                        periodo: "9115,9 dias terrestres (retrógrado)",
-                        temperatura: "-220°C",
-                        curiosidades: "Tem a órbita mais distante e excêntrica entre as luas de Netuno."
-                    },
-                    "Neso": {
-                        diametro: "60 km",
-                        distancia: "48.387.000 km de Netuno",
-                        periodo: "9740,7 dias terrestres (retrógrado)",
-                        temperatura: "-220°C",
-                        curiosidades: "É a lua mais distante de Netuno e tem órbita retrógrada extremamente excêntrica."
-                    }
-                }
-            }
-        };
+        /* Modal e Painéis */
+        #addModal { 
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
+            z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(15px); 
+        }
+        .info-panel { 
+            display: none; background: rgba(10, 10, 15, 0.95); border: 1px solid #1e3a8a; 
+            padding: 30px; border-radius: 20px; margin-top: 30px; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
 
-        function showInfo(planet) {
-            const data = planetData[planet];
-            const infoPanel = document.getElementById('infoPanel');
-            const infoContent = document.getElementById('infoContent');
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--duration) infinite; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+    </style>
+</head>
+<body class="p-8">
+    <div vw class="enabled"><div vw-access-button class="active"></div><div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div></div>
+
+    <div class="stars-container" id="starsContainer" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events: none;"></div>
+
+    <header class="text-center mb-16">
+        <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-500 italic uppercase tracking-tighter">Explorador do Cosmos</h1>
+        <p class="text-blue-400 text-xs font-bold tracking-[0.4em] mt-2 uppercase">Base de Dados Intergaláctica</p>
+        <button onclick="abrirModal()" class="mt-10 border border-blue-500 text-blue-400 px-12 py-3 rounded-full font-black hover:bg-blue-600 hover:text-white hover:tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+            REGISTRAR DESCOBERTA
+        </button>
+    </header>
+
+    <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 max-w-7xl mx-auto">
+        {% for corpo in corpos %}
+        <div class="celestial-item text-center group" onclick="verDetalhes({{ corpo.id }})">
+            <div class="planet-thumb w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden flex items-center justify-center relative">
+                {% if corpo.foto %}
+                    <img src="{{ corpo.foto.url }}" class="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700">
+                {% else %}
+                    <div class="text-[10px] text-blue-900 font-black opacity-40 uppercase">Vazio</div>
+                {% endif %}
+            </div>
+            <p class="font-black uppercase tracking-widest text-sm group-hover:text-blue-400 transition-colors">{{ corpo.nome }}</p>
+        </div>
+        {% endfor %}
+    </section>
+
+    <section id="infoPanel" class="info-panel max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div class="flex justify-between">
+            <div class="flex flex-col md:flex-row gap-10">
+                <div id="detalheFoto"></div>
+                <div>
+                    <h2 id="detalheNome" class="text-5xl font-black italic uppercase border-b border-blue-900 pb-2 mb-4 text-blue-500"></h2>
+                    <div id="detalheConteudo" class="space-y-3 text-gray-300 text-lg"></div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <button id="btnEditar" class="border border-yellow-500 text-yellow-500 px-6 py-2 rounded-lg font-bold hover:bg-yellow-500 hover:text-black transition">✏️ EDITAR</button>
+                <button id="btnExcluir" class="border border-red-500 text-red-500 px-6 py-2 rounded-lg font-bold hover:bg-red-500 hover:text-white transition">🗑️ EXCLUIR</button>
+                <button onclick="fecharInfo()" class="text-3xl text-gray-600 hover:text-white mt-4 transition">✕</button>
+            </div>
+        </div>
+    </section>
+
+    <div id="addModal">
+        <form id="bodyForm" class="bg-[#050508] p-10 rounded-3xl w-full max-w-xl border border-blue-900/50 shadow-2xl" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h2 id="modalTitle" class="text-3xl font-black text-white mb-8 uppercase tracking-tighter italic">Novo Registro</h2>
+            <input type="hidden" id="corpoId">
             
-            let html = '';
-            for (const [key, value] of Object.entries(data)) {
-                if (key !== 'nome' && key !== 'luasDetalhes') {
-                    const label = key.charAt(0).toUpperCase() + key.slice(1);
-                    html += `
-                        <div class="info-item">
-                            <div class="info-label">${label}:</div>
-                            <div class="info-value">${value}</div>
-                        </div>
-                    `;
-                }
-            }
-            
-            // Adicionar informações das luas se existirem
-            if (data.luasDetalhes) {
-                html += `
-                    <div class="info-item" style="grid-column: 1 / -1;">
-                        <div class="info-label">Detalhes das Luas:</div>
-                        <div class="moons-container">
-                `;
-                
-                for (const [moonName, moonData] of Object.entries(data.luasDetalhes)) {
-                    html += `
-                        <div class="moon-card">
-                            <h4 class="moon-name">${moonName}</h4>
-                            <div class="moon-details">
-                                <div class="moon-detail">
-                                    <span class="moon-detail-label">Diâmetro:</span>
-                                    <span class="moon-detail-value">${moonData.diametro}</span>
-                                </div>
-                                <div class="moon-detail">
-                                    <span class="moon-detail-label">Distância:</span>
-                                    <span class="moon-detail-value">${moonData.distancia}</span>
-                                </div>
-                                <div class="moon-detail">
-                                    <span class="moon-detail-label">Período orbital:</span>
-                                    <span class="moon-detail-value">${moonData.periodo}</span>
-                                </div>
-                                <div class="moon-detail">
-                                    <span class="moon-detail-label">Temperatura:</span>
-                                    <span class="moon-detail-value">${moonData.temperatura}</span>
-                                </div>
-                                <div class="moon-detail">
-                                    <span class="moon-detail-label">Curiosidades:</span>
-                                    <span class="moon-detail-value">${moonData.curiosidades}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                html += `
-                        </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Nome do Astro</label>
+                    <input type="text" id="formNome" name="nome" required class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white focus:border-blue-500 outline-none transition">
+                </div>
+
+                <div class="upload-container rounded-xl p-6 text-center relative overflow-hidden">
+                    <input type="file" name="foto" accept="image/*" onchange="preview(event)" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                    <p id="upText" class="text-blue-400 font-bold text-[10px] uppercase">📷 Mapeamento Visual (Clique para alterar)</p>
+                    <img id="imgPrev" class="max-h-24 mx-auto hidden rounded-lg shadow-lg">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Categoria</label>
+                        <select id="formCategoria" name="categoria" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
+                            <option value="star">Estrela</option>
+                            <option value="planet">Planeta</option>
+                            <option value="moon">Lua</option>
+                        </select>
                     </div>
-                `;
-            }
-            
-            infoContent.innerHTML = html;
-            infoPanel.style.display = 'block';
-            infoPanel.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function closeInfo() {
-            document.getElementById('infoPanel').style.display = 'none';
-        }
-
-        // Data SDK Handler
-        const dataHandler = {
-            onDataChanged(data) {
-                userCelestialBodies = data;
-                updateSearchIndex();
-                renderUserCelestialBodies();
-                updateParentPlanetOptions();
-            }
-        };
-
-        // Inicializar Data SDK
-        let sdkInitialized = false;
-        
-        async function initializeDataSDK() {
-            if (window.dataSdk && !sdkInitialized) {
-                try {
-                    const result = await window.dataSdk.init(dataHandler);
-                    if (result.isOk) {
-                        sdkInitialized = true;
-                        console.log("Data SDK inicializado com sucesso");
-                    } else {
-                        console.error("Erro ao inicializar Data SDK:", result.error);
-                    }
-                } catch (error) {
-                    console.error("Erro inesperado ao inicializar SDK:", error);
-                }
-            }
-        }
-        
-        // Função para aguardar inicialização do SDK
-        async function waitForSDKInitialization() {
-            let attempts = 0;
-            const maxAttempts = 50; // 5 segundos máximo
-            
-            while (!sdkInitialized && attempts < maxAttempts) {
-                if (window.dataSdk) {
-                    await initializeDataSDK();
-                }
-                if (!sdkInitialized) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    attempts++;
-                }
-            }
-            
-            return sdkInitialized;
-        }
-
-        // Sistema de busca
-        function createSearchIndex() {
-            const searchIndex = [];
-            
-            // Adicionar planetas e Sol padrão
-            for (const [key, data] of Object.entries(planetData)) {
-                searchIndex.push({
-                    id: key,
-                    name: data.nome,
-                    type: data.tipo,
-                    category: key === 'sol' ? 'star' : 'planet',
-                    searchTerms: [data.nome.toLowerCase(), key.toLowerCase()],
-                    isDefault: true
-                });
-                
-                // Adicionar luas padrão se existirem
-                if (data.luasDetalhes) {
-                    for (const [moonName, moonData] of Object.entries(data.luasDetalhes)) {
-                        searchIndex.push({
-                            id: key,
-                            name: moonName,
-                            type: `Lua de ${data.nome}`,
-                            category: 'moon',
-                            parent: data.nome,
-                            searchTerms: [moonName.toLowerCase(), `lua de ${data.nome.toLowerCase()}`],
-                            isDefault: true
-                        });
-                    }
-                }
-            }
-            
-            // Adicionar corpos celestes do usuário
-            userCelestialBodies.forEach(body => {
-                if (body.category === 'moon') {
-                    searchIndex.push({
-                        id: body.id,
-                        name: body.name,
-                        type: `Lua de ${body.parent_planet}`,
-                        category: 'moon',
-                        parent: body.parent_planet,
-                        searchTerms: [body.name.toLowerCase(), `lua de ${body.parent_planet.toLowerCase()}`],
-                        isDefault: false
-                    });
-                } else {
-                    searchIndex.push({
-                        id: body.id,
-                        name: body.name,
-                        type: body.type || body.category,
-                        category: body.category,
-                        searchTerms: [body.name.toLowerCase()],
-                        isDefault: false
-                    });
-                }
-            });
-            
-            return searchIndex;
-        }
-
-        let searchIndex = createSearchIndex();
-
-        function updateSearchIndex() {
-            searchIndex = createSearchIndex();
-        }
-
-        function performSearch(query) {
-            if (!query || query.length < 2) return [];
-            
-            const normalizedQuery = query.toLowerCase().trim();
-            const results = [];
-            
-            searchIndex.forEach(item => {
-                const score = item.searchTerms.reduce((maxScore, term) => {
-                    if (term === normalizedQuery) return Math.max(maxScore, 100);
-                    if (term.startsWith(normalizedQuery)) return Math.max(maxScore, 80);
-                    if (term.includes(normalizedQuery)) return Math.max(maxScore, 60);
-                    return maxScore;
-                }, 0);
-                
-                if (score > 0) {
-                    results.push({ ...item, score });
-                }
-            });
-            
-            return results.sort((a, b) => b.score - a.score).slice(0, 8);
-        }
-
-        function displaySearchResults(results) {
-            const searchResults = document.getElementById('searchResults');
-            
-            if (results.length === 0) {
-                searchResults.innerHTML = '<div class="no-results">Nenhum resultado encontrado</div>';
-                searchResults.style.display = 'block';
-                return;
-            }
-            
-            const html = results.map(result => {
-                const iconColor = result.category === 'planet' ? getIconColor(result.id) : '#888';
-                return `
-                    <div class="search-result-item" onclick="selectSearchResult('${result.id}', '${result.category}')">
-                        <div class="search-result-icon" style="background: ${iconColor};"></div>
-                        <div class="search-result-content">
-                            <div class="search-result-name">${result.name}</div>
-                            <div class="search-result-type">${result.type}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            searchResults.innerHTML = html;
-            searchResults.style.display = 'block';
-        }
-
-        function getIconColor(planetId) {
-            const colors = {
-                sol: '#ffeb3b',
-                mercurio: '#d4af37',
-                venus: '#ffc649',
-                terra: '#4fc3f7',
-                marte: '#ff7043',
-                jupiter: '#ffb74d',
-                saturno: '#ffcc02',
-                urano: '#4fc3f7',
-                netuno: '#3f51b5'
-            };
-            return colors[planetId] || '#888';
-        }
-
-        function selectSearchResult(planetId, category) {
-            if (searchIndex.find(item => item.id === planetId && !item.isDefault)) {
-                showUserCelestialBodyInfo(planetId);
-            } else {
-                showInfo(planetId);
-            }
-            clearSearch();
-        }
-
-        // Funções do modal
-        function openAddModal() {
-            document.getElementById('addModal').style.display = 'flex';
-            document.querySelector('.modal-header h2').textContent = 'Adicionar Nova Informação';
-            document.getElementById('addForm').removeAttribute('data-edit-id');
-            updateParentPlanetOptions();
-        }
-
-        function closeAddModal() {
-            document.getElementById('addModal').style.display = 'none';
-            document.getElementById('addForm').reset();
-            document.getElementById('parentPlanetGroup').style.display = 'none';
-            document.getElementById('addForm').removeAttribute('data-edit-id');
-            document.querySelector('.modal-header h2').textContent = 'Adicionar Nova Informação';
-        }
-
-        // Função para editar corpo celeste
-        function editCelestialBody(bodyId) {
-            const body = userCelestialBodies.find(b => b.id === bodyId);
-            if (!body) return;
-            
-            // Preencher o formulário com os dados existentes
-            document.getElementById('bodyName').value = body.name || '';
-            document.getElementById('bodyCategory').value = body.category || '';
-            document.getElementById('bodyType').value = body.type || '';
-            document.getElementById('bodyDistance').value = body.distance || '';
-            document.getElementById('bodyDiameter').value = body.diameter || '';
-            document.getElementById('bodyMass').value = body.mass || '';
-            document.getElementById('bodyTemperature').value = body.temperature || '';
-            document.getElementById('bodyMoons').value = body.moons || '';
-            document.getElementById('bodyComposition').value = body.composition || '';
-            document.getElementById('bodyCuriosities').value = body.curiosities || '';
-            document.getElementById('bodyImageUrl').value = body.image_url || '';
-            document.getElementById('parentPlanet').value = body.parent_planet || '';
-            
-            // Configurar o modal para modo de edição
-            document.querySelector('.modal-header h2').textContent = 'Editar Informações';
-            document.getElementById('addForm').setAttribute('data-edit-id', bodyId);
-            
-            // Mostrar/esconder campo de planeta pai
-            toggleParentPlanet();
-            
-            // Abrir modal
-            document.getElementById('addModal').style.display = 'flex';
-            updateParentPlanetOptions();
-        }
-
-        // Função para confirmar exclusão
-        function confirmDeleteCelestialBody(bodyId) {
-            const body = userCelestialBodies.find(b => b.id === bodyId);
-            if (!body) return;
-            
-            const infoContent = document.getElementById('infoContent');
-            
-            // Criar interface de confirmação
-            const confirmationHtml = `
-                <div class="info-item delete-confirmation" style="grid-column: 1 / -1;">
-                    <h4>⚠️ Confirmar Exclusão</h4>
-                    <p>Tem certeza que deseja excluir <strong>"${body.name}"</strong>?<br>
-                    Esta ação não pode ser desfeita.</p>
-                    <div class="delete-actions">
-                        <button onclick="cancelDelete()" class="action-btn btn-cancel">
-                            ❌ Cancelar
-                        </button>
-                        <button onclick="deleteCelestialBody('${bodyId}')" class="action-btn confirm-delete-btn">
-                            🗑️ Confirmar Exclusão
-                        </button>
+                    <div>
+                        <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Tipo</label>
+                        <input type="text" id="formTipo" name="tipo" placeholder="ex: Rochoso" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
                     </div>
                 </div>
-            `;
-            
-            // Inserir no topo do conteúdo
-            infoContent.insertAdjacentHTML('afterbegin', confirmationHtml);
-        }
 
-        // Função para cancelar exclusão
-        function cancelDelete() {
-            const confirmation = document.querySelector('.delete-confirmation');
-            if (confirmation) {
-                confirmation.remove();
-            }
-        }
-
-        // Função para excluir corpo celeste
-        async function deleteCelestialBody(bodyId) {
-            // Aguardar inicialização do SDK
-            const isInitialized = await waitForSDKInitialization();
-            if (!isInitialized) {
-                showMessage("Erro: Sistema de dados não está disponível", "error");
-                return;
-            }
-            
-            const body = userCelestialBodies.find(b => b.id === bodyId);
-            if (!body) return;
-            
-            const confirmBtn = document.querySelector('.confirm-delete-btn');
-            const originalText = confirmBtn.innerHTML;
-            
-            // Mostrar loading
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '⏳ Excluindo...';
-            
-            try {
-                const result = await window.dataSdk.delete(body);
-                
-                if (result.isOk) {
-                    showMessage(`"${body.name}" foi excluído com sucesso!`, "success");
-                    closeInfo(); // Fechar painel de informações
-                } else {
-                    showMessage("Erro ao excluir: " + result.error.message, "error");
-                    confirmBtn.disabled = false;
-                    confirmBtn.innerHTML = originalText;
-                }
-            } catch (error) {
-                showMessage("Erro inesperado ao excluir", "error");
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = originalText;
-            }
-        }
-
-        function toggleParentPlanet() {
-            const category = document.getElementById('bodyCategory').value;
-            const parentGroup = document.getElementById('parentPlanetGroup');
-            
-            if (category === 'moon') {
-                parentGroup.style.display = 'block';
-                document.getElementById('parentPlanet').required = true;
-            } else {
-                parentGroup.style.display = 'none';
-                document.getElementById('parentPlanet').required = false;
-            }
-        }
-
-        function updateParentPlanetOptions() {
-            const parentSelect = document.getElementById('parentPlanet');
-            parentSelect.innerHTML = '<option value="">Selecione o planeta...</option>';
-            
-            // Adicionar planetas padrão
-            for (const [key, data] of Object.entries(planetData)) {
-                if (key !== 'sol') {
-                    parentSelect.innerHTML += `<option value="${data.nome}">${data.nome}</option>`;
-                }
-            }
-            
-            // Adicionar planetas do usuário
-            userCelestialBodies.forEach(body => {
-                if (body.category === 'planet') {
-                    parentSelect.innerHTML += `<option value="${body.name}">${body.name}</option>`;
-                }
-            });
-        }
-
-        function clearSearch() {
-            const searchInput = document.getElementById('searchInput');
-            const searchResults = document.getElementById('searchResults');
-            const clearBtn = document.getElementById('clearBtn');
-            
-            searchInput.value = '';
-            searchResults.style.display = 'none';
-            clearBtn.style.display = 'none';
-        }
-
-        function hideSearchResults() {
-            setTimeout(() => {
-                document.getElementById('searchResults').style.display = 'none';
-            }, 200);
-        }
-
-        // Salvar nova informação ou editar existente
-        async function saveNewCelestialBody(formData) {
-            // Aguardar inicialização do SDK
-            const isInitialized = await waitForSDKInitialization();
-            if (!isInitialized) {
-                showMessage("Erro: Sistema de dados não está disponível", "error");
-                return false;
-            }
-            
-            const form = document.getElementById('addForm');
-            const editId = form.getAttribute('data-edit-id');
-            const isEditing = !!editId;
-            
-            if (!isEditing && userCelestialBodies.length >= 999) {
-                showMessage("Limite máximo de 999 corpos celestes atingido. Exclua alguns itens primeiro.", "error");
-                return false;
-            }
-
-            const saveBtn = document.getElementById('saveBtn');
-            const btnText = saveBtn.querySelector('.btn-text');
-            const btnLoading = saveBtn.querySelector('.btn-loading');
-            
-            // Mostrar loading
-            saveBtn.disabled = true;
-            btnText.style.display = 'none';
-            btnLoading.style.display = 'inline';
-            
-            try {
-                if (isEditing) {
-                    // Modo de edição - atualizar corpo celeste existente
-                    const existingBody = userCelestialBodies.find(b => b.id === editId);
-                    if (!existingBody) {
-                        showMessage("Corpo celeste não encontrado", "error");
-                        return false;
-                    }
-                    
-                    const updatedBody = {
-                        ...existingBody,
-                        name: formData.name,
-                        type: formData.type || formData.category,
-                        category: formData.category,
-                        parent_planet: formData.parent_planet || '',
-                        distance: formData.distance || '',
-                        diameter: formData.diameter || '',
-                        mass: formData.mass || '',
-                        temperature: formData.temperature || '',
-                        moons: formData.moons || '',
-                        composition: formData.composition || '',
-                        curiosities: formData.curiosities,
-                        image_url: formData.image_url || '',
-                        updated_at: new Date().toISOString()
-                    };
-
-                    const result = await window.dataSdk.update(updatedBody);
-                    
-                    if (result.isOk) {
-                        showMessage("Informações atualizadas com sucesso!", "success");
-                        closeAddModal();
-                        closeInfo(); // Fechar painel de informações para atualizar
-                        return true;
-                    } else {
-                        showMessage("Erro ao atualizar: " + result.error.message, "error");
-                        return false;
-                    }
-                } else {
-                    // Modo de criação - criar novo corpo celeste
-                    const newBody = {
-                        id: generateId(),
-                        name: formData.name,
-                        type: formData.type || formData.category,
-                        category: formData.category,
-                        parent_planet: formData.parent_planet || '',
-                        distance: formData.distance || '',
-                        diameter: formData.diameter || '',
-                        mass: formData.mass || '',
-                        temperature: formData.temperature || '',
-                        moons: formData.moons || '',
-                        composition: formData.composition || '',
-                        curiosities: formData.curiosities,
-                        image_url: formData.image_url || '',
-                        created_at: new Date().toISOString()
-                    };
-
-                    const result = await window.dataSdk.create(newBody);
-                    
-                    if (result.isOk) {
-                        showMessage("Corpo celeste adicionado com sucesso!", "success");
-                        closeAddModal();
-                        return true;
-                    } else {
-                        showMessage("Erro ao salvar: " + result.error.message, "error");
-                        return false;
-                    }
-                }
-            } catch (error) {
-                showMessage("Erro inesperado ao salvar", "error");
-                return false;
-            } finally {
-                // Esconder loading
-                saveBtn.disabled = false;
-                btnText.style.display = 'inline';
-                btnLoading.style.display = 'none';
-            }
-        }
-
-        function generateId() {
-            return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        }
-
-        function showMessage(message, type) {
-            // Criar toast message inline
-            const toast = document.createElement('div');
-            toast.className = `toast-message toast-${type}`;
-            toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 10px;
-                color: white;
-                font-weight: bold;
-                z-index: 3000;
-                animation: slideIn 0.3s ease;
-                ${type === 'success' ? 'background: #4caf50;' : 'background: #f44336;'}
-            `;
-            
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // Renderizar corpos celestes do usuário
-        function renderUserCelestialBodies() {
-            const solarSystem = document.querySelector('.solar-system');
-            
-            // Remover corpos celestes do usuário existentes
-            const existingUserBodies = solarSystem.querySelectorAll('[data-user-body]');
-            existingUserBodies.forEach(el => el.remove());
-            
-            // Adicionar novos corpos celestes do usuário
-            userCelestialBodies.forEach(body => {
-                if (body.category === 'planet' || body.category === 'star') {
-                    const celestialBodyEl = createCelestialBodyElement(body);
-                    solarSystem.appendChild(celestialBodyEl);
-                }
-            });
-            
-            // Aplicar filtro atual
-            filterByCategory();
-        }
-
-        function createCelestialBodyElement(body) {
-            const div = document.createElement('div');
-            div.className = 'celestial-body';
-            div.setAttribute('data-user-body', 'true');
-            div.setAttribute('data-category', body.category);
-            div.onclick = () => showUserCelestialBodyInfo(body.id);
-            
-            const imageHtml = body.image_url ? 
-                `<img src="${body.image_url}" alt="${body.name}" class="planet-image" onerror="this.style.display='none';">` :
-                '';
-            
-            div.innerHTML = `
-                ${imageHtml}
-                <div class="planet-name">${body.name}</div>
-            `;
-            
-            return div;
-        }
-
-        function showUserCelestialBodyInfo(bodyId) {
-            const body = userCelestialBodies.find(b => b.id === bodyId);
-            if (!body) return;
-            
-            const infoPanel = document.getElementById('infoPanel');
-            const infoContent = document.getElementById('infoContent');
-            
-            // Adicionar botões de ação no topo
-            let html = `
-                <div class="info-item" style="grid-column: 1 / -1; text-align: center; border: 2px solid rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.1);">
-                    <div class="action-buttons">
-                        <button onclick="editCelestialBody('${bodyId}')" class="action-btn edit-btn">
-                            ✏️ Editar Informações
-                        </button>
-                        <button onclick="confirmDeleteCelestialBody('${bodyId}')" class="action-btn delete-btn">
-                            🗑️ Excluir
-                        </button>
-                    </div>
+                <div>
+                    <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Distância Orbital</label>
+                    <input type="text" id="formDistancia" name="distancia" placeholder="ex: 149 milhões de km" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
                 </div>
-            `;
-            
-            const fields = [
-                { key: 'type', label: 'Tipo' },
-                { key: 'distance', label: 'Distância' },
-                { key: 'diameter', label: 'Diâmetro' },
-                { key: 'mass', label: 'Massa' },
-                { key: 'temperature', label: 'Temperatura' },
-                { key: 'moons', label: 'Luas' },
-                { key: 'composition', label: 'Composição' },
-                { key: 'curiosities', label: 'Curiosidades' }
-            ];
-            
-            fields.forEach(field => {
-                if (body[field.key] && body[field.key].trim()) {
-                    html += `
-                        <div class="info-item">
-                            <div class="info-label">${field.label}:</div>
-                            <div class="info-value">${body[field.key]}</div>
-                        </div>
-                    `;
-                }
-            });
-            
-            // Mostrar luas do usuário se for um planeta
-            if (body.category === 'planet') {
-                const userMoons = userCelestialBodies.filter(b => 
-                    b.category === 'moon' && b.parent_planet === body.name
-                );
-                
-                if (userMoons.length > 0) {
-                    html += `
-                        <div class="info-item" style="grid-column: 1 / -1;">
-                            <div class="info-label">Luas Adicionadas:</div>
-                            <div class="moons-container">
-                    `;
-                    
-                    userMoons.forEach(moon => {
-                        html += `
-                            <div class="moon-card">
-                                <h4 class="moon-name">${moon.name}</h4>
-                                <div class="moon-details">
-                                    ${moon.diameter ? `<div class="moon-detail"><span class="moon-detail-label">Diâmetro:</span><span class="moon-detail-value">${moon.diameter}</span></div>` : ''}
-                                    ${moon.distance ? `<div class="moon-detail"><span class="moon-detail-label">Distância:</span><span class="moon-detail-value">${moon.distance}</span></div>` : ''}
-                                    ${moon.temperature ? `<div class="moon-detail"><span class="moon-detail-label">Temperatura:</span><span class="moon-detail-value">${moon.temperature}</span></div>` : ''}
-                                    <div class="moon-detail">
-                                        <span class="moon-detail-label">Curiosidades:</span>
-                                        <span class="moon-detail-value">${moon.curiosities}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    html += `
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-            
-            infoContent.innerHTML = html;
-            infoPanel.style.display = 'block';
-            infoPanel.scrollIntoView({ behavior: 'smooth' });
-        }
 
-        // Filtro por categoria
-        function filterByCategory() {
-            const filter = document.getElementById('categoryFilter').value;
-            currentFilter = filter;
+                <div>
+                    <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Curiosidades</label>
+                    <textarea id="formCuriosidades" name="curiosidades" rows="3" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs resize-none" placeholder="Descreva fatos interessantes..."></textarea>
+                </div>
+            </div>
             
-            const celestialBodies = document.querySelectorAll('.celestial-body');
-            
-            celestialBodies.forEach(body => {
-                const category = body.getAttribute('data-category');
-                const isDefault = !body.hasAttribute('data-user-body');
-                
-                let shouldShow = false;
-                
-                if (filter === 'all') {
-                    shouldShow = true;
-                } else if (filter === 'star') {
-                    shouldShow = (isDefault && body.onclick.toString().includes("'sol'")) || 
-                               category === 'star';
-                } else if (filter === 'planet') {
-                    shouldShow = (isDefault && !body.onclick.toString().includes("'sol'")) || 
-                               category === 'planet';
-                } else if (filter === 'moon') {
-                    shouldShow = false; // Luas não aparecem na visualização principal
-                }
-                
-                if (shouldShow) {
-                    body.classList.remove('hidden-celestial-body');
-                } else {
-                    body.classList.add('hidden-celestial-body');
-                }
-            });
-        }
+            <div class="flex justify-end gap-6 mt-10">
+                <button type="button" onclick="fecharModal()" class="text-[10px] font-bold text-gray-500 hover:text-white uppercase transition">Cancelar</button>
+                <button type="submit" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-black text-xs uppercase hover:bg-blue-500 shadow-lg shadow-blue-900/30 transition-all">Confirmar Alterações</button>
+            </div>
+        </form>
+    </div>
 
-        // Event listeners para busca
-        document.addEventListener('DOMContentLoaded', async function() {
-            await initializeDataSDK();
-            const searchInput = document.getElementById('searchInput');
-            const clearBtn = document.getElementById('clearBtn');
-            
-            searchInput.addEventListener('input', function(e) {
-                const query = e.target.value;
-                
-                if (query.length > 0) {
-                    clearBtn.style.display = 'flex';
-                    const results = performSearch(query);
-                    displaySearchResults(results);
-                } else {
-                    clearBtn.style.display = 'none';
-                    document.getElementById('searchResults').style.display = 'none';
-                }
-            });
-            
-            searchInput.addEventListener('focus', function(e) {
-                if (e.target.value.length > 0) {
-                    const results = performSearch(e.target.value);
-                    displaySearchResults(results);
-                }
-            });
-            
-            searchInput.addEventListener('blur', hideSearchResults);
-            
-            // Prevenir que o blur esconda os resultados quando clicando neles
-            document.getElementById('searchResults').addEventListener('mousedown', function(e) {
-                e.preventDefault();
-            });
-            
-            // Busca por Enter
-            searchInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    const results = performSearch(e.target.value);
-                    if (results.length > 0) {
-                        selectSearchResult(results[0].id, results[0].category);
-                    }
-                }
-            });
-            
-            // Event listener para o formulário
-            document.getElementById('addForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = {
-                    name: document.getElementById('bodyName').value.trim(),
-                    category: document.getElementById('bodyCategory').value,
-                    parent_planet: document.getElementById('parentPlanet').value,
-                    type: document.getElementById('bodyType').value.trim(),
-                    distance: document.getElementById('bodyDistance').value.trim(),
-                    diameter: document.getElementById('bodyDiameter').value.trim(),
-                    mass: document.getElementById('bodyMass').value.trim(),
-                    temperature: document.getElementById('bodyTemperature').value.trim(),
-                    moons: document.getElementById('bodyMoons').value.trim(),
-                    composition: document.getElementById('bodyComposition').value.trim(),
-                    curiosities: document.getElementById('bodyCuriosities').value.trim(),
-                    image_url: document.getElementById('bodyImageUrl').value.trim()
-                };
-                
-                // Validações
-                if (!formData.name) {
-                    showMessage("Nome é obrigatório", "error");
-                    return;
-                }
-                
-                if (!formData.category) {
-                    showMessage("Categoria é obrigatória", "error");
-                    return;
-                }
-                
-                if (formData.category === 'moon' && !formData.parent_planet) {
-                    showMessage("Planeta principal é obrigatório para luas", "error");
-                    return;
-                }
-                
-                if (!formData.curiosities) {
-                    showMessage("Curiosidades são obrigatórias", "error");
-                    return;
-                }
-                
-                await saveNewCelestialBody(formData);
-            });
-        });
-
-        async function onConfigChange(config) {
-            document.getElementById('mainTitle').textContent = config.main_title || defaultConfig.main_title;
-            document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
-            document.getElementById('infoPanelTitle').textContent = config.info_panel_title || defaultConfig.info_panel_title;
-        }
-
-        if (window.elementSdk) {
-            window.elementSdk.init({
-                defaultConfig,
-                onConfigChange,
-                mapToCapabilities: (config) => ({
-                    recolorables: [],
-                    borderables: [],
-                    fontEditable: undefined,
-                    fontSizeable: undefined
-                }),
-                mapToEditPanelValues: (config) => new Map([
-                    ["main_title", config.main_title || defaultConfig.main_title],
-                    ["subtitle", config.subtitle || defaultConfig.subtitle],
-                    ["info_panel_title", config.info_panel_title || defaultConfig.info_panel_title]
-                ])
-            });
-        }
-
-        initializeDataSDK();
-        
-        // Inicializar VLibras
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
         new window.VLibras.Widget('https://vlibras.gov.br/app');
+
+        function createStars() {
+            const container = document.getElementById('starsContainer');
+            for (let i = 0; i < 150; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                s.style.width = s.style.height = Math.random() * 3 + 'px';
+                s.style.top = Math.random() * 100 + '%';
+                s.style.left = Math.random() * 100 + '%';
+                s.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
+                container.appendChild(s);
+            }
+        }
+        createStars();
+
+        function abrirModal() {
+            document.getElementById('addModal').style.display = 'flex';
+            document.getElementById('bodyForm').reset();
+            document.getElementById('corpoId').value = '';
+            document.getElementById('imgPrev').classList.add('hidden');
+            document.getElementById('upText').classList.remove('hidden');
+            document.getElementById('modalTitle').innerText = "Novo Registro";
+        }
+
+        function fecharModal() { document.getElementById('addModal').style.display = 'none'; }
+        function fecharInfo() { document.getElementById('infoPanel').style.display = 'none'; }
+
+        function preview(e) {
+            const r = new FileReader();
+            r.onload = () => {
+                document.getElementById('imgPrev').src = r.result;
+                document.getElementById('imgPrev').classList.remove('hidden');
+                document.getElementById('upText').classList.add('hidden');
+            };
+            if(e.target.files[0]) r.readAsDataURL(e.target.files[0]);
+        }
+
+        async function verDetalhes(id) {
+            const res = await fetch('/api/corpos/');
+            const corpos = await res.json();
+            const c = corpos.find(i => i.id == id);
+            
+            document.getElementById('detalheNome').innerText = c.nome;
+            document.getElementById('detalheFoto').innerHTML = c.foto ? `<img src="${c.foto}" class="w-72 rounded-3xl border border-blue-900 shadow-2xl">` : '';
+            document.getElementById('detalheConteudo').innerHTML = `
+                <div class="flex gap-4 mb-4">
+                    <span class="bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">${c.categoria}</span>
+                    <span class="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">${c.tipo || 'Desconhecido'}</span>
+                </div>
+                <p class="text-xs text-blue-500 font-bold mb-1 uppercase tracking-widest">Distância: ${c.distancia || 'N/D'}</p>
+                <p class="text-sm leading-relaxed text-gray-400 border-l-2 border-blue-900 pl-4 py-1 italic">"${c.curiosidades}"</p>
+            `;
+            document.getElementById('btnExcluir').onclick = () => excluir(id);
+            document.getElementById('btnEditar').onclick = () => prepararEdicao(c);
+            document.getElementById('infoPanel').style.display = 'block';
+            document.getElementById('infoPanel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function prepararEdicao(c) {
+            abrirModal();
+            document.getElementById('modalTitle').innerText = "Atualizar Astro";
+            document.getElementById('corpoId').value = c.id;
+            document.getElementById('formNome').value = c.nome;
+            document.getElementById('formCategoria').value = c.categoria;
+            document.getElementById('formTipo').value = c.tipo || '';
+            document.getElementById('formDistancia').value = c.distancia || '';
+            document.getElementById('formCuriosidades').value = c.curiosidades || '';
+        }
+
+        document.getElementById('bodyForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('corpoId').value;
+            const fd = new FormData(e.target);
+            const url = id ? `/api/salvar/${id}/` : '/api/salvar/';
+            const res = await fetch(url, { method: 'POST', body: fd, headers: {'X-CSRFToken': '{{ csrf_token }}'} });
+            if(res.ok) location.reload();
+        };
+
+        async function excluir(id) {
+            if(confirm("Deseja apagar permanentemente este registro espacial?")) {
+                await fetch(`/api/excluir/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': '{{ csrf_token }}'} });
+                location.reload();
+            }
+        }
     </script>
- 
 </body>
 </html>
