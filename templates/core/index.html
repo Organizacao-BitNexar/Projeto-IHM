@@ -36,9 +36,24 @@
         }
 
         /* Modal e Painéis */
-        #addModal { 
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
-            z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(15px); 
+      #addModal { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 100; 
+            align-items: center; 
+            justify-content: center; 
+            backdrop-filter: blur(15px);
+            padding: 20px; /* Espaço para não encostar nas bordas do navegador */
+        }
+
+        /* Limita a altura do formulário e adiciona barra de rolagem interna */
+        #bodyForm {
+            max-height: 90vh; /* Ocupa no máximo 90% da altura da tela */
+            overflow-y: auto; /* Adiciona rolagem se o conteúdo (como a imagem) for grande */
+            scrollbar-width: thin; /* Barra de rolagem fina para navegadores modernos */
+            scrollbar-color: #1e3a8a transparent;
         }
         .info-panel { 
             display: none; background: rgba(10, 10, 15, 0.95); border: 1px solid #1e3a8a; 
@@ -48,6 +63,20 @@
 
         .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        /* Adicione isso dentro da tag <style> no seu index.html */
+        #formCategoria option,
+        #formPlanetaPai option {
+            background-color: #0a1128; /* Cor azul escura igual ao fundo do site */
+            color: white;              /* Cor do texto */
+            padding: 10px;
+        }
+
+        /* Para garantir que funcione em estados de hover (seleção) */
+        #formCategoria option:hover {
+            background-color: #1e3a8a;
+        }
+
     </style>
 </head>
 <body class="p-8">
@@ -93,6 +122,25 @@
                 <button onclick="fecharInfo()" class="text-3xl text-gray-600 hover:text-white mt-4 transition">✕</button>
             </div>
         </div>
+        <!-- ... dentro do infoPanel, após a div de detalhes e botões ... -->
+        <div id="secaoLuas" class="mt-10 pt-8 border-t border-blue-900/50 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h3 class="text-2xl font-black italic uppercase text-blue-400 flex items-center gap-3">
+                    🌙 Luas e Satélites
+                </h3>
+                
+                <!-- BUSCADOR DE LUAS -->
+                <div class="relative w-full md:w-64">
+                    <input type="text" id="buscaLuas" placeholder="Filtrar luas..." 
+                        class="w-full bg-blue-900/10 border border-blue-900/30 rounded-full py-2 px-4 text-xs text-white focus:border-blue-500 outline-none transition">
+                    <span class="absolute right-3 top-2 opacity-30 text-xs">🔍</span>
+                </div>
+            </div>
+
+            <div id="listaLuas" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- As luas serão inseridas aqui via JS -->
+            </div>
+        </div>
     </section>
 
     <div id="addModal">
@@ -107,10 +155,16 @@
                     <input type="text" id="formNome" name="nome" required class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white focus:border-blue-500 outline-none transition">
                 </div>
 
-                <div class="upload-container rounded-xl p-6 text-center relative overflow-hidden">
+                <!-- Mapeamento Visual (Upload de Foto) -->
+                <div class="upload-container rounded-xl p-2 text-center relative overflow-hidden border border-dashed border-blue-900/50 hover:border-blue-500 transition-colors bg-blue-900/5">
                     <input type="file" name="foto" accept="image/*" onchange="preview(event)" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                    <p id="upText" class="text-blue-400 font-bold text-[10px] uppercase">📷 Mapeamento Visual (Clique para alterar)</p>
-                    <img id="imgPrev" class="max-h-24 mx-auto hidden rounded-lg shadow-lg">
+                    
+                    <div class="py-2"> <!-- Container interno para controlar melhor o espaço -->
+                        <p id="upText" class="text-blue-400 font-bold text-[10px] uppercase m-0">
+                            📷 Mapeamento Visual (Clique aqui)
+                        </p>
+                        <img id="imgPrev" class="max-h-32 mx-auto hidden rounded-lg shadow-lg mt-2 border border-blue-500/30">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -126,6 +180,13 @@
                         <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Tipo</label>
                         <input type="text" id="formTipo" name="tipo" placeholder="ex: Rochoso" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
                     </div>
+                </div>
+
+                <div id="containerPlanetaPai" class="hidden mt-4">
+                    <label class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">Planeta de Órbita (Pai)</label>
+                    <select id="formPlanetaPai" name="planeta_pai" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
+                        <option value="">Selecione o planeta...</option>
+                    </select>
                 </div>
 
                 <div>
@@ -150,6 +211,20 @@
     <script>
         new window.VLibras.Widget('https://vlibras.gov.br/app');
 
+        // Função para converter o termo técnico para o nome visível
+        function formatarCategoria(categoria) {
+            const mapa = {
+                'star': 'Estrela',
+                'estrela': 'Estrela',
+                'planet': 'Planeta',
+                'planeta': 'Planeta',
+                'moon': 'Lua',
+                'lua': 'Lua'
+            };
+            // Retorna o nome traduzido ou a própria palavra se não encontrar no mapa
+            return mapa[categoria.toLowerCase()] || categoria;
+        }
+
         function createStars() {
             const container = document.getElementById('starsContainer');
             for (let i = 0; i < 150; i++) {
@@ -171,6 +246,40 @@
             document.getElementById('imgPrev').classList.add('hidden');
             document.getElementById('upText').classList.remove('hidden');
             document.getElementById('modalTitle').innerText = "Novo Registro";
+            document.getElementById('containerPlanetaPai').classList.add('hidden');
+        }
+
+        // --- COLE ESTE BLOCO LOGO ABAIXO DA FUNÇÃO abrirModal ---
+
+        // Esta parte vigia o campo "Categoria"
+        document.getElementById('formCategoria').addEventListener('change', function() {
+            const container = document.getElementById('containerPlanetaPai');
+            
+            // Se selecionou "lua", mostra o campo de Planeta Pai e carrega a lista
+            if (this.value === 'moon') {
+                container.classList.remove('hidden');
+                carregarListaPlanetas(); 
+            } else {
+                // Se selecionou Estrela ou Planeta, esconde o campo
+                container.classList.add('hidden');
+                document.getElementById('formPlanetaPai').value = '';
+            }
+        });
+
+        // Esta função busca todos os astros e filtra apenas os que são planetas
+        async function carregarListaPlanetas() {
+            const res = await fetch('/api/corpos/');
+            const corpos = await res.json();
+            const selectPai = document.getElementById('formPlanetaPai');
+            
+            // Filtra apenas quem tem a categoria 'planeta'
+            const planetas = corpos.filter(c => c.categoria === 'planet');
+            
+            // Limpa a lista atual e coloca os planetas encontrados
+            selectPai.innerHTML = '<option value="">Selecione o planeta...</option>';
+            planetas.forEach(p => {
+                selectPai.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+            });
         }
 
         function fecharModal() { document.getElementById('addModal').style.display = 'none'; }
@@ -186,29 +295,78 @@
             if(e.target.files[0]) r.readAsDataURL(e.target.files[0]);
         }
 
+        // Variável global para guardar as luas do planeta aberto no momento
+        let luasAtuais = []; 
+
         async function verDetalhes(id) {
             const res = await fetch('/api/corpos/');
             const corpos = await res.json();
             const c = corpos.find(i => i.id == id);
             
             document.getElementById('detalheNome').innerText = c.nome;
-            document.getElementById('detalheFoto').innerHTML = c.foto ? `<img src="${c.foto}" class="w-72 rounded-3xl border border-blue-900 shadow-2xl">` : '';
+            document.getElementById('detalheFoto').innerHTML = c.foto ? 
+                `<img src="${c.foto}" class="w-72 rounded-3xl border border-blue-900 shadow-2xl">` : '';
+            
             document.getElementById('detalheConteudo').innerHTML = `
                 <div class="flex gap-4 mb-4">
-                    <span class="bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">${c.categoria}</span>
+                    <span class="bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">${formatarCategoria(c.categoria)}</span>
                     <span class="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">${c.tipo || 'Desconhecido'}</span>
                 </div>
                 <p class="text-xs text-blue-500 font-bold mb-1 uppercase tracking-widest">Distância: ${c.distancia || 'N/D'}</p>
                 <p class="text-sm leading-relaxed text-gray-400 border-l-2 border-blue-900 pl-4 py-1 italic">"${c.curiosidades}"</p>
             `;
+
+            // Filtra as luas que pertencem a este planeta
+            // O sinal '==' (dois iguais) em vez de '===' ignora se um é texto e outro é número
+            luasAtuais = corpos.filter(corpo => corpo.planeta_pai_id == c.id);
+            
+            renderizarLuas(luasAtuais); // Chama a função para desenhar as luas na tela
+
             document.getElementById('btnExcluir').onclick = () => excluir(id);
             document.getElementById('btnEditar').onclick = () => prepararEdicao(c);
+            
             document.getElementById('infoPanel').style.display = 'block';
             document.getElementById('infoPanel').scrollIntoView({ behavior: 'smooth' });
         }
 
+        // Função auxiliar para desenhar a lista de luas
+        function renderizarLuas(lista) {
+            const secaoLuas = document.getElementById('secaoLuas');
+            const listaLuas = document.getElementById('listaLuas');
+            
+            if (lista.length > 0 || document.getElementById('buscaLuas').value !== "") {
+                secaoLuas.classList.remove('hidden');
+                if (lista.length === 0) {
+                    listaLuas.innerHTML = `<p class="col-span-full text-center text-gray-500 py-4 italic text-sm">Nenhuma lua encontrada com este nome.</p>`;
+                } else {
+                    listaLuas.innerHTML = lista.map(lua => `
+                        <div class="bg-blue-900/10 border border-blue-900/30 p-4 rounded-2xl flex items-center gap-4 hover:bg-blue-900/20 transition-all cursor-pointer group" onclick="verDetalhes(${lua.id})">
+                            <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-blue-500/30 group-hover:border-blue-400 transition-colors">
+                                ${lua.foto ? `<img src="${lua.foto}" class="w-full h-full object-cover">` : ''}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm uppercase group-hover:text-blue-400 transition-colors">${lua.nome}</h4>
+                                <p class="text-[10px] text-blue-500 uppercase font-bold tracking-tighter">${lua.tipo || 'Satélite'}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                secaoLuas.classList.add('hidden');
+            }
+        }
+
+        // Lógica do Buscador de Luas (Filtro em tempo real)
+        document.getElementById('buscaLuas')?.addEventListener('input', function(e) {
+            const termo = e.target.value.toLowerCase();
+            const luasFiltradas = luasAtuais.filter(lua => 
+                lua.nome.toLowerCase().includes(termo)
+            );
+            renderizarLuas(luasFiltradas);
+        });
+
         function prepararEdicao(c) {
-            abrirModal();
+             abrirModal();
             document.getElementById('modalTitle').innerText = "Atualizar Astro";
             document.getElementById('corpoId').value = c.id;
             document.getElementById('formNome').value = c.nome;
@@ -216,6 +374,18 @@
             document.getElementById('formTipo').value = c.tipo || '';
             document.getElementById('formDistancia').value = c.distancia || '';
             document.getElementById('formCuriosidades').value = c.curiosidades || '';
+
+            // Lógica para mostrar/esconder o Planeta Pai na edição
+            const containerPai = document.getElementById('containerPlanetaPai');
+            if (c.categoria === 'moon' || c.categoria === 'lua') {
+                containerPai.classList.remove('hidden');
+                carregarListaPlanetas().then(() => {
+                    document.getElementById('formPlanetaPai').value = c.planeta_pai_id || '';
+                });
+            } else {
+                containerPai.classList.add('hidden');
+            }
+        
         }
 
         document.getElementById('bodyForm').onsubmit = async (e) => {

@@ -170,7 +170,7 @@
             border-radius: 25px;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            color: white;
+            color: rgb(255, 255, 255);
             font-size: 1rem;
             outline: none;
             transition: all 0.3s ease;

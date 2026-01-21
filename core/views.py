@@ -5,7 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 def index(request):
-    corpos = CorpoCeleste.objects.all()
+     # Mudamos aqui para excluir a categoria 'lua' da página inicial
+    corpos = CorpoCeleste.objects.exclude(categoria='moon')
     return render(request, 'core/index.html', {'corpos': corpos})
 
 def listar_corpos(request):
@@ -20,6 +21,7 @@ def listar_corpos(request):
             'distancia': c.distancia,
             'curiosidades': c.curiosidades,
             'foto': c.foto.url if c.foto else None,
+            'planeta_pai_id': c.planeta_pai_id,
         })
     return JsonResponse(data, safe=False)
 
@@ -48,6 +50,12 @@ def salvar_corpo(request, pk=None):
         corpo.tipo = request.POST.get('tipo', '')
         corpo.distancia = request.POST.get('distancia', '')
         corpo.curiosidades = request.POST.get('curiosidades', '')
+
+        pai_id = request.POST.get('planeta_pai')
+        if pai_id and corpo.categoria == 'moon':
+            corpo.planeta_pai_id = pai_id
+        else:
+            corpo.planeta_pai = None # Se não for lua, garante que não tem pai
 
         if 'foto' in request.FILES:
             corpo.foto = request.FILES['foto']
