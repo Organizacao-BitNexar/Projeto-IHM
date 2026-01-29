@@ -73,21 +73,20 @@ def salvar_corpo(request, pk=None):
     if request.method == 'POST':
         corpo = get_object_or_404(CorpoCeleste, pk=pk) if pk else CorpoCeleste()
         
-        corpo.nome = request.POST.get('nome')
-        corpo.categoria = request.POST.get('categoria')
-        corpo.tipo = request.POST.get('tipo', '')
-        corpo.distancia = request.POST.get('distancia', '')
-        corpo.diametro = request.POST.get('diametro', '')
-        corpo.massa = request.POST.get('massa', '')
-        corpo.temperatura = request.POST.get('temperatura', '')
-        corpo.curiosidades = request.POST.get('curiosidades', '')
-
-        
+        # Pega o novo valor, mas se vier vazio, mantém o que já estava no banco (corpo.campo)
+        corpo.nome = request.POST.get('nome', corpo.nome)
+        corpo.categoria = request.POST.get('categoria', corpo.categoria)
+        corpo.tipo = request.POST.get('tipo', corpo.tipo)
+        corpo.distancia = request.POST.get('distancia', corpo.distancia)
+        corpo.massa = request.POST.get('massa', corpo.massa)
+        corpo.temperatura = request.POST.get('temperatura', corpo.temperatura)
+        corpo.curiosidades = request.POST.get('curiosidades', corpo.curiosidades)
 
         pai_id = request.POST.get('planeta_pai')
         if pai_id and pai_id.isdigit():
             corpo.planeta_pai = get_object_or_404(CorpoCeleste, id=pai_id)
-        else:
+        # Se for novo ou se mudou a categoria no formulário:
+        elif request.POST.get('categoria') != 'lua':
             corpo.planeta_pai = None
 
         if 'foto' in request.FILES:
@@ -95,7 +94,6 @@ def salvar_corpo(request, pk=None):
         
         corpo.save()
         return JsonResponse({'status': 'sucesso'})
-
 @user_passes_test(admin_only)
 def excluir_corpo(request, pk):
     if request.method == 'DELETE':

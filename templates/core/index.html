@@ -279,6 +279,8 @@
                 <div class="grid grid-cols-2 gap-4 text-xs font-mono">
                     <p><b class="text-blue-900 uppercase">Massa:</b> ${c.massa || 'N/D'}</p>
                     <p><b class="text-blue-900 uppercase">Temp:</b> ${c.temperatura || 'N/D'}</p>
+                    <!-- Distância aparecendo após Temperatura -->
+                    <p class="col-span-2"><b class="text-blue-900 uppercase">Distância:</b> ${c.distancia || 'N/D'}</p>
                 </div>
                 <p class="text-sm italic text-gray-400 leading-relaxed mt-4 border-l-2 border-blue-900 pl-4">"${c.curiosidades}"</p>
             `;
@@ -296,6 +298,13 @@
             document.getElementById('corpoId').value = c.id;
             document.getElementById('formNome').value = c.nome;
             document.getElementById('formCategoria').value = c.categoria;
+            
+            // CAMPOS QUE VOCÊ QUER MANTER:
+            document.getElementById('formMassa').value = c.massa || '';
+            document.getElementById('formTemperatura').value = c.temperatura || '';
+            document.getElementById('formTipo').value = c.tipo || '';
+            document.getElementById('formDistancia').value = c.distancia || ''; // Garante que a distância carregue
+            
             document.getElementById('formCuriosidades').value = c.curiosidades || '';
             if (c.categoria === 'lua') {
                 document.getElementById('containerPlanetaPai').classList.remove('hidden');
