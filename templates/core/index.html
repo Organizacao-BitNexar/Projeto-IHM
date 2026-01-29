@@ -8,7 +8,7 @@
     <style>
         body { background: radial-gradient(circle at center, #0a1128 0%, #000000 100%); color: white; min-height: 100vh; overflow-x: hidden; }
         .modal-espacial { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
-        .input-espacial { background: rgba(30, 58, 138, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(30, 58, 138, 0.3); color: white; width: 100%; outline: none; }
+        .input-espacial { background: rgba(30, 58, 138, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(30, 58, 138, 0.3); color: white; width: 100%; outline: none; margin-bottom: 1rem; }
         .celestial-item { transition: all 0.5s ease; cursor: pointer; position: relative; }
         .celestial-item:hover { transform: scale(1.05); }
         .planet-thumb { transition: all 0.5s ease; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
@@ -21,27 +21,29 @@
 <body class="p-8">
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
-        <div vw-plugin-wrapper>
-            <div class="vw-plugin-top-wrapper"></div>
-        </div>
+        <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
     </div>
 
     <div id="starsContainer" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events: none;"></div>
 
     <nav class="flex justify-end gap-6 mb-4 text-[10px] font-bold uppercase tracking-widest">
         {% if user.is_authenticated %}
-            <span class="text-blue-400 italic">Comandante: {{ user.username }}</span>
-            <form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="hover:text-red-500 transition">Sair</button></form>
+            <span class="text-blue-400 italic">{% if user.is_superuser %}Comandante{% else %}Astronauta{% endif %}: {{ user.username }}</span>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="hover:text-red-500 transition">Sair da Nave</button>
+            </form>
         {% else %}
-            <button onclick="abrirModal('loginModal')" class="hover:text-blue-400 transition">Acessar Terminal</button>
-            <button onclick="abrirModal('signupModal')" class="text-blue-500 hover:text-white transition">Novo Recruta</button>
+            <button onclick="abrirModal('loginModal')" class="hover:text-blue-400 transition">Embarcar</button>
+            <button onclick="abrirModal('signupModal')" class="text-blue-500 hover:text-white transition">Novo Astronauta</button>
         {% endif %}
     </nav>
 
     <header class="text-center mb-16">
-        <h1 class="text-6xl font-black italic uppercase text-blue-500 tracking-tighter">Cosmos Explorer</h1>
+        <h1 class="text-6xl font-black italic uppercase text-blue-500 tracking-tighter">Explorador dos Cosmos</h1>
         <p class="text-blue-300 tracking-[0.2em] text-xs font-bold uppercase mt-2">O Explorador espacial acessível</p>
-        {% if user.is_authenticated %}
+        
+        {% if user.is_superuser %}
             <button onclick="abrirRegistro()" class="mt-8 border border-blue-500 text-blue-400 px-10 py-3 rounded-full font-black hover:bg-blue-600 hover:text-white transition shadow-lg shadow-blue-900/20">REGISTRAR DESCOBERTA</button>
         {% endif %}
     </header>
@@ -58,7 +60,7 @@
         {% endfor %}
     </section>
 
-    <section id="infoPanel" class="hidden max-w-5xl mx-auto mt-12 p-10 bg-black/80 border border-blue-900 rounded-3xl backdrop-blur-md">
+    <section id="infoPanel" class="hidden max-w-5xl mx-auto mt-12 p-10 bg-black/80 border border-blue-900 rounded-3xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div class="flex justify-between">
             <div class="flex flex-col md:flex-row gap-10">
                 <div id="detalheFoto"></div>
@@ -69,7 +71,7 @@
                 </div>
             </div>
             <div class="flex flex-col gap-4">
-                {% if user.is_authenticated %}
+                {% if user.is_superuser %}
                     <button id="btnEditar" class="text-yellow-500 border border-yellow-500 px-6 py-2 rounded-lg font-bold hover:bg-yellow-500 hover:text-black">EDITAR</button>
                     <button id="btnExcluir" class="text-red-500 border border-red-500 px-6 py-2 rounded-lg font-bold hover:bg-red-500">EXCLUIR</button>
                 {% endif %}
@@ -84,7 +86,7 @@
             <h2 id="modalTitle" class="text-3xl font-black mb-8 uppercase italic tracking-tighter">Relatório Orbital</h2>
             <input type="hidden" id="corpoId">
             <div class="grid grid-cols-2 gap-4">
-                <input type="text" id="formNome" name="nome" placeholder="NOME DO ASTRO" required class="input-espacial">
+                <input type="text" id="formNome" name="nome" placeholder="NOME" required class="input-espacial">
                 <select id="formCategoria" name="categoria" onchange="togglePlanetaPai()" class="input-espacial">
                     <option value="estrela">Estrela</option>
                     <option value="planeta">Planeta</option>
@@ -94,7 +96,6 @@
                     <label class="text-[10px] text-blue-400 font-bold block mb-1 uppercase">Planeta Anfitrião</label>
                     <select id="formPlanetaPai" name="planeta_pai" class="input-espacial"></select>
                 </div>
-                <input type="text" id="formTipo" name="tipo" placeholder="TIPO" class="input-espacial">
                 <input type="text" id="formDistancia" name="distancia" placeholder="DISTÂNCIA" class="input-espacial">
                 <input type="text" id="formMassa" name="massa" placeholder="MASSA" class="input-espacial">
                 <input type="text" id="formTemperatura" name="temperatura" placeholder="TEMP" class="input-espacial">
@@ -110,9 +111,10 @@
 
     <div id="loginModal" class="modal-espacial">
         <form id="loginForm" class="bg-[#050508] p-10 rounded-3xl border border-blue-900/50 w-full max-w-sm">
-            {% csrf_token %}<h2 class="text-xl font-black mb-6 uppercase text-blue-500 italic">Login</h2>
-            <input type="text" name="username" placeholder="Usuário" required class="input-espacial mb-4">
-            <input type="password" name="password" placeholder="Senha" required class="input-espacial mb-4">
+            {% csrf_token %}
+            <h2 class="text-xl font-black mb-6 uppercase text-blue-500 italic">Identificação</h2>
+            <input type="text" name="username" placeholder="Usuário" required class="input-espacial">
+            <input type="password" name="password" placeholder="Senha" required class="input-espacial">
             <button type="submit" class="w-full bg-blue-600 py-3 rounded-xl font-black uppercase text-xs">Entrar</button>
             <button type="button" onclick="fecharModais()" class="w-full mt-4 text-xs text-gray-500">Voltar</button>
         </form>
@@ -120,36 +122,32 @@
 
     <div id="signupModal" class="modal-espacial">
         <form id="signupForm" class="bg-[#050508] p-10 rounded-3xl border border-blue-900/50 w-full max-w-sm">
-            {% csrf_token %}<h2 class="text-xl font-black mb-6 uppercase text-blue-500 italic">Cadastro</h2>
-            <input type="text" name="username" placeholder="Usuário" required class="input-espacial mb-4">
-            <input type="password" name="password" placeholder="Senha" required class="input-espacial mb-4">
-            <button type="submit" class="w-full bg-blue-600 py-3 rounded-xl font-black uppercase text-xs">Cadastrar</button>
+            {% csrf_token %}
+            <h2 class="text-xl font-black mb-6 uppercase text-blue-500 italic">Novo Astronauta</h2>
+            <input type="text" name="username" placeholder="Usuário" required class="input-espacial">
+            <input type="password" name="password1" placeholder="Escolher Senha" required class="input-espacial">
+            <input type="password" name="password2" placeholder="Confirmar Senha" required class="input-espacial">
+            <button type="submit" class="w-full bg-blue-600 py-3 rounded-xl font-black uppercase text-xs">Criar Conta</button>
             <button type="button" onclick="fecharModais()" class="w-full mt-4 text-xs text-gray-500">Voltar</button>
         </form>
     </div>
 
-    <!-- Script do VLibras -->
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-    
     <script>
-        // 1. INICIALIZAÇÃO DO VLIBRAS
         function initVLibras() {
             if (window.VLibras && typeof window.VLibras.Widget === 'function') {
                 new window.VLibras.Widget('https://vlibras.gov.br/app');
-            } else {
-                setTimeout(initVLibras, 500);
-            }
+            } else { setTimeout(initVLibras, 500); }
         }
         initVLibras();
 
-        // 2. FUNÇÃO DAS MINI LUAS (Definição)
+        // Renderização Mini Luas nos Cards
         async function renderizarMiniLuas() {
             try {
                 const res = await fetch('/api/corpos/');
                 const corpos = await res.json();
                 corpos.forEach(c => {
                     const orbit = document.getElementById(`orbit-${c.id}`);
-                    // Só renderiza se o planeta tiver luas no banco
                     if (orbit && c.categoria === 'planeta' && c.luas && c.luas.length > 0) {
                         orbit.innerHTML = c.luas.map(l => `
                             <div class="mini-moon" title="${l.nome}" onclick="event.stopPropagation(); verDetalhes(${l.id})">
@@ -158,29 +156,19 @@
                         `).join('');
                     }
                 });
-            } catch (err) {
-                console.error("Erro ao carregar mini luas:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // 3. EVENTO ÚNICO DE CARREGAMENTO (ESTRELAS + LUAS)
         window.addEventListener('load', () => {
-            // Chama a função das luas
             renderizarMiniLuas();
-
-            // Cria as estrelas no fundo
             const sc = document.getElementById('starsContainer');
-            if (sc) {
-                sc.innerHTML = ''; // Limpa para evitar duplicatas
-                for (let i = 0; i < 150; i++) {
-                    const s = document.createElement('div');
-                    s.className = 'star';
-                    s.style.width = s.style.height = Math.random() * 3 + 'px';
-                    s.style.top = Math.random() * 100 + '%'; 
-                    s.style.left = Math.random() * 100 + '%';
-                    s.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
-                    sc.appendChild(s);
-                }
+            for (let i = 0; i < 150; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                s.style.width = s.style.height = Math.random() * 3 + 'px';
+                s.style.top = Math.random() * 100 + '%'; s.style.left = Math.random() * 100 + '%';
+                s.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
+                sc.appendChild(s);
             }
         });
 
@@ -226,19 +214,22 @@
             document.getElementById('detalheConteudo').innerHTML = `
                 <p class="text-xs text-blue-500 font-bold uppercase mb-4">${c.categoria} | ${c.tipo || 'N/D'}</p>
                 <div class="grid grid-cols-2 gap-4 text-xs font-mono">
-                    <p><b class="text-blue-900">MASSA:</b> ${c.massa || 'N/D'}</p>
-                    <p><b class="text-blue-900">TEMP:</b> ${c.temperatura || 'N/D'}</p>
+                    <p><b class="text-blue-900 uppercase">Massa:</b> ${c.massa || 'N/D'}</p>
+                    <p><b class="text-blue-900 uppercase">Temp:</b> ${c.temperatura || 'N/D'}</p>
                 </div>
                 <p class="text-sm italic text-gray-400 leading-relaxed mt-4 border-l-2 border-blue-900 pl-4">"${c.curiosidades}"</p>
             `;
             document.getElementById('detalheLuas').innerHTML = luasHtml;
             document.getElementById('infoPanel').classList.remove('hidden');
+            document.getElementById('infoPanel').scrollIntoView({ behavior: 'smooth' });
+            
             if(document.getElementById('btnExcluir')) document.getElementById('btnExcluir').onclick = () => excluir(id);
             if(document.getElementById('btnEditar')) document.getElementById('btnEditar').onclick = () => prepararEdicao(c);
         }
 
         async function prepararEdicao(c) {
             abrirRegistro();
+            document.getElementById('modalTitle').innerText = "Atualizar Astro";
             document.getElementById('corpoId').value = c.id;
             document.getElementById('formNome').value = c.nome;
             document.getElementById('formCategoria').value = c.categoria;
@@ -250,10 +241,49 @@
             }
         }
 
-        document.getElementById('loginForm').onsubmit = async (e) => { e.preventDefault(); const res = await fetch('/api/login/', { method: 'POST', body: new FormData(e.target) }); if(res.ok) location.reload(); };
-        document.getElementById('signupForm').onsubmit = async (e) => { e.preventDefault(); const res = await fetch('/api/signup/', { method: 'POST', body: new FormData(e.target) }); if(res.ok) location.reload(); };
-        document.getElementById('bodyForm').onsubmit = async (e) => { e.preventDefault(); const id = document.getElementById('corpoId').value; const url = id ? `/api/salvar/${id}/` : '/api/salvar/'; const res = await fetch(url, { method: 'POST', body: new FormData(e.target), headers: {'X-CSRFToken': '{{ csrf_token }}'} }); if(res.ok) location.reload(); };
-        async function excluir(id) { if(confirm("Apagar?")) { await fetch(`/api/excluir/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': '{{ csrf_token }}'} }); location.reload(); } }
+        // --- AUTH AJAX ---
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/login/', { 
+                method: 'POST', body: new FormData(e.target), headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            });
+            if(res.ok) location.reload();
+            else alert("Identificação negada.");
+        };
+
+        document.getElementById('signupForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/signup/', { 
+                method: 'POST', body: new FormData(e.target), headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            });
+            const data = await res.json();
+            if(res.ok) location.reload();
+            else {
+                let msg = "Erro no Registo:\n";
+                if (data.errors) {
+                    const erros = JSON.parse(data.errors);
+                    for (let c in erros) { msg += `- ${c.includes('password') ? 'Senha' : c}: ${erros[c][0].message}\n`; }
+                } else { msg += "Usuário já existe ou senha inválida."; }
+                alert(msg);
+            }
+        };
+
+        document.getElementById('bodyForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('corpoId').value;
+            const url = id ? `/api/salvar/${id}/` : '/api/salvar/';
+            await fetch(url, { 
+                method: 'POST', body: new FormData(e.target), headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            });
+            location.reload();
+        };
+
+        async function excluir(id) {
+            if(confirm("Confirmar desintegração do registro?")) {
+                await fetch(`/api/excluir/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': '{{ csrf_token }}'} });
+                location.reload();
+            }
+        }
     </script>
 </body>
 </html>
