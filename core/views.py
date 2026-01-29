@@ -82,6 +82,8 @@ def salvar_corpo(request, pk=None):
         corpo.temperatura = request.POST.get('temperatura', '')
         corpo.curiosidades = request.POST.get('curiosidades', '')
 
+        
+
         pai_id = request.POST.get('planeta_pai')
         if pai_id and pai_id.isdigit():
             corpo.planeta_pai = get_object_or_404(CorpoCeleste, id=pai_id)
