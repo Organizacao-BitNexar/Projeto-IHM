@@ -8,7 +8,25 @@
     <style>
         body { background: radial-gradient(circle at center, #0a1128 0%, #000000 100%); color: white; min-height: 100vh; overflow-x: hidden; }
         .modal-espacial { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
-        .input-espacial { background: rgba(30, 58, 138, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(30, 58, 138, 0.3); color: white; width: 100%; outline: none; margin-bottom: 1rem; }
+        
+        /* AJUSTE NA COR DO FUNDO DOS INPUTS E SELECTS */
+        .input-espacial { 
+            background: #0c1633 !important; /* Cor azul marinho bem escura */
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(30, 58, 138, 0.3); 
+            color: white; 
+            width: 100%; 
+            outline: none; 
+            margin-bottom: 1rem; 
+        }
+
+        /* AJUSTE ESPECÍFICO PARA AS OPÇÕES DENTRO DO SELECT */
+        .input-espacial option {
+            background-color: #0c1633;
+            color: white;
+        }
+
         .celestial-item { transition: all 0.5s ease; cursor: pointer; position: relative; }
         .celestial-item:hover { transform: scale(1.05); }
         .planet-thumb { transition: all 0.5s ease; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
@@ -141,7 +159,6 @@
         }
         initVLibras();
 
-        // Renderização Mini Luas nos Cards
         async function renderizarMiniLuas() {
             try {
                 const res = await fetch('/api/corpos/');
@@ -241,7 +258,6 @@
             }
         }
 
-        // --- AUTH AJAX ---
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
             const res = await fetch('/api/login/', { 
