@@ -128,45 +128,61 @@
         </form>
     </div>
 
+    <!-- Script do VLibras -->
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    
     <script>
-        // INICIALIZAÇÃO VLIBRAS COM CHEQUE DE CARREGAMENTO
+        // 1. INICIALIZAÇÃO DO VLIBRAS
         function initVLibras() {
-            if (typeof window.VLibras !== 'undefined') {
+            if (window.VLibras && typeof window.VLibras.Widget === 'function') {
                 new window.VLibras.Widget('https://vlibras.gov.br/app');
             } else {
-                setTimeout(initVLibras, 500); // Tenta novamente em 0.5s se ainda não carregou
+                setTimeout(initVLibras, 500);
             }
         }
         initVLibras();
 
+        // 2. FUNÇÃO DAS MINI LUAS (Definição)
         async function renderizarMiniLuas() {
-            const res = await fetch('/api/corpos/');
-            const corpos = await res.json();
-            corpos.forEach(c => {
-                const orbit = document.getElementById(`orbit-${c.id}`);
-                if (orbit && c.categoria === 'planeta' && c.luas.length > 0) {
-                    orbit.innerHTML = c.luas.map(l => `
-                        <div class="mini-moon" title="${l.nome}" onclick="event.stopPropagation(); verDetalhes(${l.id})">
-                            ${l.foto ? `<img src="${l.foto}" class="w-full h-full object-cover">` : ''}
-                        </div>
-                    `).join('');
-                }
-            });
+            try {
+                const res = await fetch('/api/corpos/');
+                const corpos = await res.json();
+                corpos.forEach(c => {
+                    const orbit = document.getElementById(`orbit-${c.id}`);
+                    // Só renderiza se o planeta tiver luas no banco
+                    if (orbit && c.categoria === 'planeta' && c.luas && c.luas.length > 0) {
+                        orbit.innerHTML = c.luas.map(l => `
+                            <div class="mini-moon" title="${l.nome}" onclick="event.stopPropagation(); verDetalhes(${l.id})">
+                                ${l.foto ? `<img src="${l.foto}" class="w-full h-full object-cover">` : ''}
+                            </div>
+                        `).join('');
+                    }
+                });
+            } catch (err) {
+                console.error("Erro ao carregar mini luas:", err);
+            }
         }
 
-        window.onload = () => {
+        // 3. EVENTO ÚNICO DE CARREGAMENTO (ESTRELAS + LUAS)
+        window.addEventListener('load', () => {
+            // Chama a função das luas
             renderizarMiniLuas();
+
+            // Cria as estrelas no fundo
             const sc = document.getElementById('starsContainer');
-            for (let i = 0; i < 150; i++) {
-                const s = document.createElement('div');
-                s.className = 'star';
-                s.style.width = s.style.height = Math.random() * 3 + 'px';
-                s.style.top = Math.random() * 100 + '%'; s.style.left = Math.random() * 100 + '%';
-                s.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
-                sc.appendChild(s);
+            if (sc) {
+                sc.innerHTML = ''; // Limpa para evitar duplicatas
+                for (let i = 0; i < 150; i++) {
+                    const s = document.createElement('div');
+                    s.className = 'star';
+                    s.style.width = s.style.height = Math.random() * 3 + 'px';
+                    s.style.top = Math.random() * 100 + '%'; 
+                    s.style.left = Math.random() * 100 + '%';
+                    s.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
+                    sc.appendChild(s);
+                }
             }
-        };
+        });
 
         function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
         function fecharModais() { document.querySelectorAll('.modal-espacial').forEach(m => m.style.display = 'none'); }
