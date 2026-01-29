@@ -6,403 +6,238 @@
     <title>Cosmos Explorer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* --- FUNDO E ANIMAÇÕES --- */
-        body { 
-            background: radial-gradient(circle at center, #0a1128 0%, #000000 100%);
-            color: white; min-height: 100vh; position: relative; overflow-x: hidden;
-        }
-
-        /* ANIMAÇÃO DE HOVER (O QUE HAVIA SAÍDO) */
-        .celestial-item {
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-        }
-
-        .celestial-item:hover {
-            transform: scale(1.15) translateY(-10px); /* Cresce e sobe */
-            filter: brightness(1.25);
-        }
-
-        .planet-thumb { 
-            transition: all 0.5s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.03);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        .celestial-item:hover .planet-thumb { 
-            box-shadow: 0 0 35px rgba(59, 130, 246, 0.6); /* Brilho neon azul */
-            border-color: rgba(59, 130, 246, 0.8);
-        }
-
-        /* Modal e Painéis */
-      #addModal { 
-            display: none; 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,0.85); 
-            z-index: 100; 
-            align-items: center; 
-            justify-content: center; 
-            backdrop-filter: blur(15px);
-            padding: 20px; /* Espaço para não encostar nas bordas do navegador */
-        }
-
-        /* Limita a altura do formulário e adiciona barra de rolagem interna */
-        #bodyForm {
-            max-height: 90vh; /* Ocupa no máximo 90% da altura da tela */
-            overflow-y: auto; /* Adiciona rolagem se o conteúdo (como a imagem) for grande */
-            scrollbar-width: thin; /* Barra de rolagem fina para navegadores modernos */
-            scrollbar-color: #1e3a8a transparent;
-        }
-        .info-panel { 
-            display: none; background: rgba(10, 10, 15, 0.95); border: 1px solid #1e3a8a; 
-            padding: 30px; border-radius: 20px; margin-top: 30px; 
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-        }
-
+        body { background: radial-gradient(circle at center, #0a1128 0%, #000000 100%); color: white; min-height: 100vh; overflow-x: hidden; }
+        .modal-espacial { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
+        .input-espacial { background: rgba(30, 58, 138, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(30, 58, 138, 0.3); color: white; width: 100%; outline: none; }
+        .celestial-item { transition: all 0.5s ease; cursor: pointer; position: relative; }
+        .celestial-item:hover { transform: scale(1.05); }
+        .planet-thumb { transition: all 0.5s ease; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
+        .moon-orbit { position: absolute; top: -5px; right: -5px; display: flex; gap: 4px; z-index: 20; }
+        .mini-moon { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: #222; overflow: hidden; cursor: help; }
         .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--duration) infinite; }
-        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
-
-        /* Adicione isso dentro da tag <style> no seu index.html */
-        #formCategoria option,
-        #formPlanetaPai option {
-            background-color: #0a1128; /* Cor azul escura igual ao fundo do site */
-            color: white;              /* Cor do texto */
-            padding: 10px;
-        }
-
-        /* Para garantir que funcione em estados de hover (seleção) */
-        #formCategoria option:hover {
-            background-color: #1e3a8a;
-        }
-
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
     </style>
 </head>
 <body class="p-8">
-    <div vw class="enabled"><div vw-access-button class="active"></div><div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div></div>
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
 
-    <div class="stars-container" id="starsContainer" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events: none;"></div>
+    <div id="starsContainer" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events: none;"></div>
+
+    <nav class="flex justify-end gap-6 mb-4 text-[10px] font-bold uppercase tracking-widest">
+        {% if user.is_authenticated %}
+            <span class="text-blue-400 italic">Comandante: {{ user.username }}</span>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="hover:text-red-500 transition">Sair</button></form>
+        {% else %}
+            <button onclick="abrirModal('loginModal')" class="hover:text-blue-400 transition">Acessar Terminal</button>
+            <button onclick="abrirModal('signupModal')" class="text-blue-500 hover:text-white transition">Novo Recruta</button>
+        {% endif %}
+    </nav>
 
     <header class="text-center mb-16">
-        <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-500 italic uppercase tracking-tighter">Explorador do Cosmos</h1>
-        <p class="text-blue-400 text-xs font-bold tracking-[0.4em] mt-2 uppercase">Base de Dados Intergaláctica</p>
-        <button onclick="abrirModal()" class="mt-10 border border-blue-500 text-blue-400 px-12 py-3 rounded-full font-black hover:bg-blue-600 hover:text-white hover:tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
-            REGISTRAR DESCOBERTA
-        </button>
+        <h1 class="text-6xl font-black italic uppercase text-blue-500 tracking-tighter">Cosmos Explorer</h1>
+        <p class="text-blue-300 tracking-[0.2em] text-xs font-bold uppercase mt-2">O Explorador espacial acessível</p>
+        {% if user.is_authenticated %}
+            <button onclick="abrirRegistro()" class="mt-8 border border-blue-500 text-blue-400 px-10 py-3 rounded-full font-black hover:bg-blue-600 hover:text-white transition shadow-lg shadow-blue-900/20">REGISTRAR DESCOBERTA</button>
+        {% endif %}
     </header>
 
-    <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 max-w-7xl mx-auto">
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-16 max-w-6xl mx-auto">
         {% for corpo in corpos %}
         <div class="celestial-item text-center group" onclick="verDetalhes({{ corpo.id }})">
-            <div class="planet-thumb w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden flex items-center justify-center relative">
-                {% if corpo.foto %}
-                    <img src="{{ corpo.foto.url }}" class="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700">
-                {% else %}
-                    <div class="text-[10px] text-blue-900 font-black opacity-40 uppercase">Vazio</div>
-                {% endif %}
+            <div class="moon-orbit" id="orbit-{{ corpo.id }}"></div>
+            <div class="planet-thumb w-36 h-36 mx-auto mb-4 rounded-full overflow-hidden flex items-center justify-center relative shadow-lg">
+                {% if corpo.foto %}<img src="{{ corpo.foto.url }}" class="w-full h-full object-cover">{% endif %}
             </div>
-            <p class="font-black uppercase tracking-widest text-sm group-hover:text-blue-400 transition-colors">{{ corpo.nome }}</p>
+            <p class="font-black uppercase tracking-widest text-sm group-hover:text-blue-400">{{ corpo.nome }}</p>
         </div>
         {% endfor %}
     </section>
 
-    <section id="infoPanel" class="info-panel max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <section id="infoPanel" class="hidden max-w-5xl mx-auto mt-12 p-10 bg-black/80 border border-blue-900 rounded-3xl backdrop-blur-md">
         <div class="flex justify-between">
             <div class="flex flex-col md:flex-row gap-10">
                 <div id="detalheFoto"></div>
                 <div>
-                    <h2 id="detalheNome" class="text-5xl font-black italic uppercase border-b border-blue-900 pb-2 mb-4 text-blue-500"></h2>
-                    <div id="detalheConteudo" class="space-y-3 text-gray-300 text-lg"></div>
+                    <h2 id="detalheNome" class="text-5xl font-black italic uppercase text-blue-500 border-b border-blue-900 pb-2 mb-4"></h2>
+                    <div id="detalheConteudo" class="space-y-3 text-gray-300"></div>
+                    <div id="detalheLuas" class="mt-6 flex gap-4"></div>
                 </div>
             </div>
             <div class="flex flex-col gap-4">
-                <button id="btnEditar" class="border border-yellow-500 text-yellow-500 px-6 py-2 rounded-lg font-bold hover:bg-yellow-500 hover:text-black transition">✏️ EDITAR</button>
-                <button id="btnExcluir" class="border border-red-500 text-red-500 px-6 py-2 rounded-lg font-bold hover:bg-red-500 hover:text-white transition">🗑️ EXCLUIR</button>
-                <button onclick="fecharInfo()" class="text-3xl text-gray-600 hover:text-white mt-4 transition">✕</button>
-            </div>
-        </div>
-        <!-- ... dentro do infoPanel, após a div de detalhes e botões ... -->
-        <div id="secaoLuas" class="mt-10 pt-8 border-t border-blue-900/50 hidden">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h3 class="text-2xl font-black italic uppercase text-blue-400 flex items-center gap-3">
-                    🌙 Luas e Satélites
-                </h3>
-                
-                <!-- BUSCADOR DE LUAS -->
-                <div class="relative w-full md:w-64">
-                    <input type="text" id="buscaLuas" placeholder="Filtrar luas..." 
-                        class="w-full bg-blue-900/10 border border-blue-900/30 rounded-full py-2 px-4 text-xs text-white focus:border-blue-500 outline-none transition">
-                    <span class="absolute right-3 top-2 opacity-30 text-xs">🔍</span>
-                </div>
-            </div>
-
-            <div id="listaLuas" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- As luas serão inseridas aqui via JS -->
+                {% if user.is_authenticated %}
+                    <button id="btnEditar" class="text-yellow-500 border border-yellow-500 px-6 py-2 rounded-lg font-bold hover:bg-yellow-500 hover:text-black">EDITAR</button>
+                    <button id="btnExcluir" class="text-red-500 border border-red-500 px-6 py-2 rounded-lg font-bold hover:bg-red-500">EXCLUIR</button>
+                {% endif %}
+                <button onclick="document.getElementById('infoPanel').classList.add('hidden')" class="text-3xl text-gray-600 hover:text-white mt-4 transition">✕</button>
             </div>
         </div>
     </section>
 
-    <div id="addModal">
-        <form id="bodyForm" class="bg-[#050508] p-10 rounded-3xl w-full max-w-xl border border-blue-900/50 shadow-2xl" enctype="multipart/form-data">
+    <div id="registroModal" class="modal-espacial">
+        <form id="bodyForm" class="bg-[#050508] p-10 rounded-3xl w-full max-w-2xl border border-blue-900/50 shadow-2xl">
             {% csrf_token %}
-            <h2 id="modalTitle" class="text-3xl font-black text-white mb-8 uppercase tracking-tighter italic">Novo Registro</h2>
+            <h2 id="modalTitle" class="text-3xl font-black mb-8 uppercase italic tracking-tighter">Relatório Orbital</h2>
             <input type="hidden" id="corpoId">
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Nome do Astro</label>
-                    <input type="text" id="formNome" name="nome" required class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white focus:border-blue-500 outline-none transition">
+            <div class="grid grid-cols-2 gap-4">
+                <input type="text" id="formNome" name="nome" placeholder="NOME DO ASTRO" required class="input-espacial">
+                <select id="formCategoria" name="categoria" onchange="togglePlanetaPai()" class="input-espacial">
+                    <option value="estrela">Estrela</option>
+                    <option value="planeta">Planeta</option>
+                    <option value="lua">Lua</option>
+                </select>
+                <div id="containerPlanetaPai" class="hidden col-span-2">
+                    <label class="text-[10px] text-blue-400 font-bold block mb-1 uppercase">Planeta Anfitrião</label>
+                    <select id="formPlanetaPai" name="planeta_pai" class="input-espacial"></select>
                 </div>
-
-                <!-- Mapeamento Visual (Upload de Foto) -->
-                <div class="upload-container rounded-xl p-2 text-center relative overflow-hidden border border-dashed border-blue-900/50 hover:border-blue-500 transition-colors bg-blue-900/5">
-                    <input type="file" name="foto" accept="image/*" onchange="preview(event)" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                    
-                    <div class="py-2"> <!-- Container interno para controlar melhor o espaço -->
-                        <p id="upText" class="text-blue-400 font-bold text-[10px] uppercase m-0">
-                            📷 Mapeamento Visual (Clique aqui)
-                        </p>
-                        <img id="imgPrev" class="max-h-32 mx-auto hidden rounded-lg shadow-lg mt-2 border border-blue-500/30">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Categoria</label>
-                        <select id="formCategoria" name="categoria" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
-                            <option value="star">Estrela</option>
-                            <option value="planet">Planeta</option>
-                            <option value="moon">Lua</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Tipo</label>
-                        <input type="text" id="formTipo" name="tipo" placeholder="ex: Rochoso" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
-                    </div>
-                </div>
-
-                <div id="containerPlanetaPai" class="hidden mt-4">
-                    <label class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">Planeta de Órbita (Pai)</label>
-                    <select id="formPlanetaPai" name="planeta_pai" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
-                        <option value="">Selecione o planeta...</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Distância Orbital</label>
-                    <input type="text" id="formDistancia" name="distancia" placeholder="ex: 149 milhões de km" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs">
-                </div>
-
-                <div>
-                    <label class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Curiosidades</label>
-                    <textarea id="formCuriosidades" name="curiosidades" rows="3" class="w-full bg-blue-900/10 p-3 rounded-xl border border-blue-900/30 text-white text-xs resize-none" placeholder="Descreva fatos interessantes..."></textarea>
-                </div>
+                <input type="text" id="formTipo" name="tipo" placeholder="TIPO" class="input-espacial">
+                <input type="text" id="formDistancia" name="distancia" placeholder="DISTÂNCIA" class="input-espacial">
+                <input type="text" id="formMassa" name="massa" placeholder="MASSA" class="input-espacial">
+                <input type="text" id="formTemperatura" name="temperatura" placeholder="TEMP" class="input-espacial">
             </div>
-            
-            <div class="flex justify-end gap-6 mt-10">
-                <button type="button" onclick="fecharModal()" class="text-[10px] font-bold text-gray-500 hover:text-white uppercase transition">Cancelar</button>
-                <button type="submit" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-black text-xs uppercase hover:bg-blue-500 shadow-lg shadow-blue-900/30 transition-all">Confirmar Alterações</button>
+            <textarea id="formCuriosidades" name="curiosidades" rows="3" class="input-espacial mt-4 resize-none" placeholder="CURIOSIDADES"></textarea>
+            <div class="mt-4"><input type="file" name="foto" class="text-xs"></div>
+            <div class="flex justify-end gap-6 mt-8">
+                <button type="button" onclick="fecharModais()" class="text-gray-500 uppercase font-bold text-xs">Abortar</button>
+                <button type="submit" class="bg-blue-600 px-10 py-3 rounded-xl font-black uppercase text-xs">Confirmar</button>
             </div>
+        </form>
+    </div>
+
+    <div id="loginModal" class="modal-espacial">
+        <form id="loginForm" class="bg-[#050508] p-10 rounded-3xl border border-blue-900/50 w-full max-w-sm">
+            {% csrf_token %}<h2 class="text-xl font-black mb-6 uppercase text-blue-500 italic">Login</h2>
+            <input type="text" name="username" placeholder="Usuário" required class="input-espacial mb-4">
+            <input type="password" name="password" placeholder="Senha" required class="input-espacial mb-4">
+            <button type="submit" class="w-full bg-blue-600 py-3 rounded-xl font-black uppercase text-xs">Entrar</button>
+            <button type="button" onclick="fecharModais()" class="w-full mt-4 text-xs text-gray-500">Voltar</button>
+        </form>
+    </div>
+
+    <div id="signupModal" class="modal-espacial">
+        <form id="signupForm" class="bg-[#050508] p-10 rounded-3xl border border-blue-900/50 w-full max-w-sm">
+            {% csrf_token %}<h2 class="text-xl font-black mb-6 uppercase text-blue-500 italic">Cadastro</h2>
+            <input type="text" name="username" placeholder="Usuário" required class="input-espacial mb-4">
+            <input type="password" name="password" placeholder="Senha" required class="input-espacial mb-4">
+            <button type="submit" class="w-full bg-blue-600 py-3 rounded-xl font-black uppercase text-xs">Cadastrar</button>
+            <button type="button" onclick="fecharModais()" class="w-full mt-4 text-xs text-gray-500">Voltar</button>
         </form>
     </div>
 
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
     <script>
-        new window.VLibras.Widget('https://vlibras.gov.br/app');
+        // INICIALIZAÇÃO VLIBRAS COM CHEQUE DE CARREGAMENTO
+        function initVLibras() {
+            if (typeof window.VLibras !== 'undefined') {
+                new window.VLibras.Widget('https://vlibras.gov.br/app');
+            } else {
+                setTimeout(initVLibras, 500); // Tenta novamente em 0.5s se ainda não carregou
+            }
+        }
+        initVLibras();
 
-        // Função para converter o termo técnico para o nome visível
-        function formatarCategoria(categoria) {
-            const mapa = {
-                'star': 'Estrela',
-                'estrela': 'Estrela',
-                'planet': 'Planeta',
-                'planeta': 'Planeta',
-                'moon': 'Lua',
-                'lua': 'Lua'
-            };
-            // Retorna o nome traduzido ou a própria palavra se não encontrar no mapa
-            return mapa[categoria.toLowerCase()] || categoria;
+        async function renderizarMiniLuas() {
+            const res = await fetch('/api/corpos/');
+            const corpos = await res.json();
+            corpos.forEach(c => {
+                const orbit = document.getElementById(`orbit-${c.id}`);
+                if (orbit && c.categoria === 'planeta' && c.luas.length > 0) {
+                    orbit.innerHTML = c.luas.map(l => `
+                        <div class="mini-moon" title="${l.nome}" onclick="event.stopPropagation(); verDetalhes(${l.id})">
+                            ${l.foto ? `<img src="${l.foto}" class="w-full h-full object-cover">` : ''}
+                        </div>
+                    `).join('');
+                }
+            });
         }
 
-        function createStars() {
-            const container = document.getElementById('starsContainer');
+        window.onload = () => {
+            renderizarMiniLuas();
+            const sc = document.getElementById('starsContainer');
             for (let i = 0; i < 150; i++) {
                 const s = document.createElement('div');
                 s.className = 'star';
                 s.style.width = s.style.height = Math.random() * 3 + 'px';
-                s.style.top = Math.random() * 100 + '%';
-                s.style.left = Math.random() * 100 + '%';
+                s.style.top = Math.random() * 100 + '%'; s.style.left = Math.random() * 100 + '%';
                 s.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
-                container.appendChild(s);
+                sc.appendChild(s);
             }
-        }
-        createStars();
+        };
 
-        function abrirModal() {
-            document.getElementById('addModal').style.display = 'flex';
-            document.getElementById('bodyForm').reset();
-            document.getElementById('corpoId').value = '';
-            document.getElementById('imgPrev').classList.add('hidden');
-            document.getElementById('upText').classList.remove('hidden');
-            document.getElementById('modalTitle').innerText = "Novo Registro";
-            document.getElementById('containerPlanetaPai').classList.add('hidden');
-        }
+        function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function fecharModais() { document.querySelectorAll('.modal-espacial').forEach(m => m.style.display = 'none'); }
+        function abrirRegistro() { abrirModal('registroModal'); document.getElementById('bodyForm').reset(); document.getElementById('corpoId').value = ''; togglePlanetaPai(); }
 
-        // --- COLE ESTE BLOCO LOGO ABAIXO DA FUNÇÃO abrirModal ---
-
-        // Esta parte vigia o campo "Categoria"
-        document.getElementById('formCategoria').addEventListener('change', function() {
-            const container = document.getElementById('containerPlanetaPai');
-            
-            // Se selecionou "lua", mostra o campo de Planeta Pai e carrega a lista
-            if (this.value === 'moon') {
-                container.classList.remove('hidden');
-                carregarListaPlanetas(); 
-            } else {
-                // Se selecionou Estrela ou Planeta, esconde o campo
-                container.classList.add('hidden');
-                document.getElementById('formPlanetaPai').value = '';
-            }
-        });
-
-        // Esta função busca todos os astros e filtra apenas os que são planetas
         async function carregarListaPlanetas() {
             const res = await fetch('/api/corpos/');
             const corpos = await res.json();
-            const selectPai = document.getElementById('formPlanetaPai');
-            
-            // Filtra apenas quem tem a categoria 'planeta'
-            const planetas = corpos.filter(c => c.categoria === 'planet');
-            
-            // Limpa a lista atual e coloca os planetas encontrados
-            selectPai.innerHTML = '<option value="">Selecione o planeta...</option>';
-            planetas.forEach(p => {
-                selectPai.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
-            });
+            const select = document.getElementById('formPlanetaPai');
+            select.innerHTML = '<option value="">Nenhum</option>';
+            corpos.filter(c => c.categoria === 'planeta').forEach(p => select.innerHTML += `<option value="${p.id}">${p.nome}</option>`);
         }
 
-        function fecharModal() { document.getElementById('addModal').style.display = 'none'; }
-        function fecharInfo() { document.getElementById('infoPanel').style.display = 'none'; }
-
-        function preview(e) {
-            const r = new FileReader();
-            r.onload = () => {
-                document.getElementById('imgPrev').src = r.result;
-                document.getElementById('imgPrev').classList.remove('hidden');
-                document.getElementById('upText').classList.add('hidden');
-            };
-            if(e.target.files[0]) r.readAsDataURL(e.target.files[0]);
+        function togglePlanetaPai() {
+            const cat = document.getElementById('formCategoria').value;
+            const container = document.getElementById('containerPlanetaPai');
+            if (cat === 'lua') { container.classList.remove('hidden'); carregarListaPlanetas(); }
+            else { container.classList.add('hidden'); }
         }
-
-        // Variável global para guardar as luas do planeta aberto no momento
-        let luasAtuais = []; 
 
         async function verDetalhes(id) {
             const res = await fetch('/api/corpos/');
             const corpos = await res.json();
             const c = corpos.find(i => i.id == id);
-            
             document.getElementById('detalheNome').innerText = c.nome;
-            document.getElementById('detalheFoto').innerHTML = c.foto ? 
-                `<img src="${c.foto}" class="w-72 rounded-3xl border border-blue-900 shadow-2xl">` : '';
+            document.getElementById('detalheFoto').innerHTML = c.foto ? `<img src="${c.foto}" class="w-72 rounded-3xl border border-blue-900 shadow-2xl">` : '';
+            
+            let luasHtml = c.luas && c.luas.length > 0 ? `
+                <h4 class="text-blue-400 font-bold uppercase text-[10px] mt-4 mb-2 tracking-widest">Luas Conhecidas:</h4>
+                <div class="flex gap-4">
+                    ${c.luas.map(l => `
+                        <div class="text-center cursor-pointer" onclick="verDetalhes(${l.id})">
+                            <div class="w-10 h-10 rounded-full border border-gray-700 overflow-hidden mx-auto hover:border-blue-500 transition">
+                                ${l.foto ? `<img src="${l.foto}" class="w-full h-full object-cover">` : ''}
+                            </div>
+                            <p class="text-[8px] mt-1">${l.nome}</p>
+                        </div>
+                    `).join('')}
+                </div>` : '';
             
             document.getElementById('detalheConteudo').innerHTML = `
-                <div class="flex gap-4 mb-4">
-                    <span class="bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">${formatarCategoria(c.categoria)}</span>
-                    <span class="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">${c.tipo || 'Desconhecido'}</span>
+                <p class="text-xs text-blue-500 font-bold uppercase mb-4">${c.categoria} | ${c.tipo || 'N/D'}</p>
+                <div class="grid grid-cols-2 gap-4 text-xs font-mono">
+                    <p><b class="text-blue-900">MASSA:</b> ${c.massa || 'N/D'}</p>
+                    <p><b class="text-blue-900">TEMP:</b> ${c.temperatura || 'N/D'}</p>
                 </div>
-                <p class="text-xs text-blue-500 font-bold mb-1 uppercase tracking-widest">Distância: ${c.distancia || 'N/D'}</p>
-                <p class="text-sm leading-relaxed text-gray-400 border-l-2 border-blue-900 pl-4 py-1 italic">"${c.curiosidades}"</p>
+                <p class="text-sm italic text-gray-400 leading-relaxed mt-4 border-l-2 border-blue-900 pl-4">"${c.curiosidades}"</p>
             `;
-
-            // Filtra as luas que pertencem a este planeta
-            // O sinal '==' (dois iguais) em vez de '===' ignora se um é texto e outro é número
-            luasAtuais = corpos.filter(corpo => corpo.planeta_pai_id == c.id);
-            
-            renderizarLuas(luasAtuais); // Chama a função para desenhar as luas na tela
-
-            document.getElementById('btnExcluir').onclick = () => excluir(id);
-            document.getElementById('btnEditar').onclick = () => prepararEdicao(c);
-            
-            document.getElementById('infoPanel').style.display = 'block';
-            document.getElementById('infoPanel').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('detalheLuas').innerHTML = luasHtml;
+            document.getElementById('infoPanel').classList.remove('hidden');
+            if(document.getElementById('btnExcluir')) document.getElementById('btnExcluir').onclick = () => excluir(id);
+            if(document.getElementById('btnEditar')) document.getElementById('btnEditar').onclick = () => prepararEdicao(c);
         }
 
-        // Função auxiliar para desenhar a lista de luas
-        function renderizarLuas(lista) {
-            const secaoLuas = document.getElementById('secaoLuas');
-            const listaLuas = document.getElementById('listaLuas');
-            
-            if (lista.length > 0 || document.getElementById('buscaLuas').value !== "") {
-                secaoLuas.classList.remove('hidden');
-                if (lista.length === 0) {
-                    listaLuas.innerHTML = `<p class="col-span-full text-center text-gray-500 py-4 italic text-sm">Nenhuma lua encontrada com este nome.</p>`;
-                } else {
-                    listaLuas.innerHTML = lista.map(lua => `
-                        <div class="bg-blue-900/10 border border-blue-900/30 p-4 rounded-2xl flex items-center gap-4 hover:bg-blue-900/20 transition-all cursor-pointer group" onclick="verDetalhes(${lua.id})">
-                            <div class="w-12 h-12 rounded-full bg-gray-800 overflow-hidden flex-shrink-0 border border-blue-500/30 group-hover:border-blue-400 transition-colors">
-                                ${lua.foto ? `<img src="${lua.foto}" class="w-full h-full object-cover">` : ''}
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-white text-sm uppercase group-hover:text-blue-400 transition-colors">${lua.nome}</h4>
-                                <p class="text-[10px] text-blue-500 uppercase font-bold tracking-tighter">${lua.tipo || 'Satélite'}</p>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            } else {
-                secaoLuas.classList.add('hidden');
-            }
-        }
-
-        // Lógica do Buscador de Luas (Filtro em tempo real)
-        document.getElementById('buscaLuas')?.addEventListener('input', function(e) {
-            const termo = e.target.value.toLowerCase();
-            const luasFiltradas = luasAtuais.filter(lua => 
-                lua.nome.toLowerCase().includes(termo)
-            );
-            renderizarLuas(luasFiltradas);
-        });
-
-        function prepararEdicao(c) {
-             abrirModal();
-            document.getElementById('modalTitle').innerText = "Atualizar Astro";
+        async function prepararEdicao(c) {
+            abrirRegistro();
             document.getElementById('corpoId').value = c.id;
             document.getElementById('formNome').value = c.nome;
             document.getElementById('formCategoria').value = c.categoria;
-            document.getElementById('formTipo').value = c.tipo || '';
-            document.getElementById('formDistancia').value = c.distancia || '';
             document.getElementById('formCuriosidades').value = c.curiosidades || '';
-
-            // Lógica para mostrar/esconder o Planeta Pai na edição
-            const containerPai = document.getElementById('containerPlanetaPai');
-            if (c.categoria === 'moon' || c.categoria === 'lua') {
-                containerPai.classList.remove('hidden');
-                carregarListaPlanetas().then(() => {
-                    document.getElementById('formPlanetaPai').value = c.planeta_pai_id || '';
-                });
-            } else {
-                containerPai.classList.add('hidden');
-            }
-        
-        }
-
-        document.getElementById('bodyForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('corpoId').value;
-            const fd = new FormData(e.target);
-            const url = id ? `/api/salvar/${id}/` : '/api/salvar/';
-            const res = await fetch(url, { method: 'POST', body: fd, headers: {'X-CSRFToken': '{{ csrf_token }}'} });
-            if(res.ok) location.reload();
-        };
-
-        async function excluir(id) {
-            if(confirm("Deseja apagar permanentemente este registro espacial?")) {
-                await fetch(`/api/excluir/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': '{{ csrf_token }}'} });
-                location.reload();
+            if (c.categoria === 'lua') {
+                document.getElementById('containerPlanetaPai').classList.remove('hidden');
+                await carregarListaPlanetas();
+                document.getElementById('formPlanetaPai').value = c.planeta_pai_id || '';
             }
         }
+
+        document.getElementById('loginForm').onsubmit = async (e) => { e.preventDefault(); const res = await fetch('/api/login/', { method: 'POST', body: new FormData(e.target) }); if(res.ok) location.reload(); };
+        document.getElementById('signupForm').onsubmit = async (e) => { e.preventDefault(); const res = await fetch('/api/signup/', { method: 'POST', body: new FormData(e.target) }); if(res.ok) location.reload(); };
+        document.getElementById('bodyForm').onsubmit = async (e) => { e.preventDefault(); const id = document.getElementById('corpoId').value; const url = id ? `/api/salvar/${id}/` : '/api/salvar/'; const res = await fetch(url, { method: 'POST', body: new FormData(e.target), headers: {'X-CSRFToken': '{{ csrf_token }}'} }); if(res.ok) location.reload(); };
+        async function excluir(id) { if(confirm("Apagar?")) { await fetch(`/api/excluir/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': '{{ csrf_token }}'} }); location.reload(); } }
     </script>
 </body>
 </html>

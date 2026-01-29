@@ -14,7 +14,6 @@ class CorpoCeleste(models.Model):
     diametro = models.CharField(max_length=100, blank=True)
     massa = models.CharField(max_length=100, blank=True)
     temperatura = models.CharField(max_length=100, blank=True)
-    composicao = models.TextField(blank=True)
     curiosidades = models.TextField()
     foto = models.ImageField(upload_to='corpos_celestes/', null=True, blank=True)
 
@@ -22,10 +21,9 @@ class CorpoCeleste(models.Model):
         'self',
         null=True,
         blank=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='luas'
     )
 
     def __str__(self):
         return self.nome
-# Create your models here.
