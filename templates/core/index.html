@@ -30,8 +30,32 @@
         .celestial-item { transition: all 0.5s ease; cursor: pointer; position: relative; }
         .celestial-item:hover { transform: scale(1.05); }
         .planet-thumb { transition: all 0.5s ease; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
-        .moon-orbit { position: absolute; top: -5px; right: -5px; display: flex; gap: 4px; z-index: 20; }
-        .mini-moon { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: #222; overflow: hidden; cursor: help; }
+
+       .moon-orbit { 
+    position: absolute; 
+    top: -10px; 
+    right: -10px; 
+    display: grid; 
+    grid-template-columns: repeat(3, 22px); /* 3 colunas de 22px */
+    grid-template-rows: repeat(2, 22px);    /* 2 linhas de 22px */
+    gap: 4px; 
+    z-index: 20; 
+}
+
+    /* Ajuste sutil na mini-moon para garantir que o texto "..." centralize */
+    .mini-moon { 
+        width: 22px; 
+        height: 22px; 
+        border-radius: 50%; 
+        border: 1px solid rgba(255,255,255,0.4); 
+        background: #111; 
+        overflow: hidden; 
+        cursor: help;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
         .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--duration) infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
     </style>
@@ -160,20 +184,40 @@
         initVLibras();
 
         async function renderizarMiniLuas() {
-            try {
-                const res = await fetch('/api/corpos/');
-                const corpos = await res.json();
-                corpos.forEach(c => {
-                    const orbit = document.getElementById(`orbit-${c.id}`);
-                    if (orbit && c.categoria === 'planeta' && c.luas && c.luas.length > 0) {
-                        orbit.innerHTML = c.luas.map(l => `
+        try {
+            const res = await fetch('/api/corpos/');
+            const corpos = await res.json();
+            
+            corpos.forEach(c => {
+                const orbit = document.getElementById(`orbit-${c.id}`);
+                if (orbit && c.categoria === 'planeta' && c.luas && c.luas.length > 0) {
+                    const totalLuas = c.luas.length;
+                    const limite = 6;
+                    
+                    // Pegamos apenas as primeiras 6 luas para processar
+                    let luasExibidas = c.luas.slice(0, limite);
+
+                    orbit.innerHTML = luasExibidas.map((l, index) => {
+                        // Se houver mais de 6 luas e estivermos no 6º slot (index 5)
+                        if (totalLuas > limite && index === limite - 1) {
+                            return `
+                                <div class="mini-moon bg-blue-900/80 border-blue-400 text-[10px] font-black text-blue-200" 
+                                    title="Mais ${totalLuas - 5} luas">
+                                    ...
+                                </div>
+                            `;
+                        }
+
+                        // Renderização normal da lua
+                        return `
                             <div class="mini-moon" title="${l.nome}" onclick="event.stopPropagation(); verDetalhes(${l.id})">
                                 ${l.foto ? `<img src="${l.foto}" class="w-full h-full object-cover">` : ''}
                             </div>
-                        `).join('');
-                    }
-                });
-            } catch (err) { console.error(err); }
+                        `;
+                    }).join('');
+                }
+            });
+        } catch (err) { console.error("Erro orbital:", err); }
         }
 
         window.addEventListener('load', () => {
